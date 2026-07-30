@@ -18,33 +18,25 @@ export default function ChartDisplay({
   error,
 }: ChartDisplayProps) {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
-  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  // Revoke Blob URLs on unmount or update to prevent browser memory leaks
+  // Track current Object URL for memory cleanup
   const currentUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!imageBlob) return;
 
+    // Create object URL for the image Blob
     const newUrl = URL.createObjectURL(imageBlob);
-    setPendingUrl(newUrl);
-
-    return () => {
-      // Cleanup pending URL if unmounted early
-    };
-  }, [imageBlob]);
-
-  const handleImageLoaded = () => {
-    if (pendingUrl) {
-      if (currentUrlRef.current) {
-        URL.revokeObjectURL(currentUrlRef.current);
-      }
-      currentUrlRef.current = pendingUrl;
-      setCurrentUrl(pendingUrl);
-      setPendingUrl(null);
+    
+    // Revoke previous URL to prevent memory leaks
+    if (currentUrlRef.current) {
+      URL.revokeObjectURL(currentUrlRef.current);
     }
-  };
+
+    currentUrlRef.current = newUrl;
+    setCurrentUrl(newUrl);
+  }, [imageBlob]);
 
   return (
     <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-sm flex flex-col justify-between space-y-4">
@@ -84,23 +76,13 @@ export default function ChartDisplay({
             <p className="text-[11px] text-slate-400">{error}</p>
           </div>
         ) : currentUrl ? (
-          /* Rendered Image with Double Buffering */
+          /* Rendered Image */
           <div className="relative max-w-full max-h-full flex items-center justify-center">
-            {/* Main visible image */}
             <img
               src={currentUrl}
               alt={spec?.title || "Rendered Chart"}
               className="max-h-[460px] w-auto object-contain rounded-lg shadow-2xl transition-opacity duration-200"
             />
-            {/* Hidden pre-loader image for double buffering */}
-            {pendingUrl && (
-              <img
-                src={pendingUrl}
-                alt="Preloading Chart"
-                onLoad={handleImageLoaded}
-                className="hidden"
-              />
-            )}
           </div>
         ) : (
           /* Empty Placeholder State */

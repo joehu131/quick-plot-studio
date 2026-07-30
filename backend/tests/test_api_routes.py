@@ -29,6 +29,26 @@ def test_upload_file_endpoint(client, sample_sales_csv_text):
     assert "dataset_id" in data
     assert data["row_count"] == 6
 
+def test_analyze_endpoint(client, sample_sales_csv_text):
+    # Step 1: Upload dataset
+    upload_res = client.post(
+        "/api/upload/text",
+        json={"csv_text": sample_sales_csv_text}
+    )
+    assert upload_res.status_code == 200
+    dataset_id = upload_res.json()["dataset_id"]
+
+    # Step 2: Analyze dataset with AI endpoint
+    analyze_res = client.post(
+        "/api/analyze",
+        json={"dataset_id": dataset_id}
+    )
+    assert analyze_res.status_code == 200
+    spec = analyze_res.json()
+    assert "chart_type" in spec
+    assert "title" in spec
+    assert "x_column" in spec
+
 def test_render_endpoint(client, sample_sales_csv_text):
     # Step 1: Upload dataset
     upload_res = client.post(

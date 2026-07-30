@@ -57,7 +57,7 @@ class AIService:
             raise ValueError("Empty response received from Gemini API.")
 
         except Exception as e:
-            logger.warning(f"Gemini API call failed or unconfigured: {e}. Falling back to heuristic spec.")
+            logger.warning(f"Gemini API call failed: {e}. Falling back to heuristic spec.")
             return self._heuristic_fallback(summary, str(e))
 
     def _build_prompt(self, summary: DatasetSummary) -> str:
@@ -88,9 +88,15 @@ You are an expert data visualization architect. Analyze the dataset summary belo
 """
 
     def _heuristic_fallback(self, summary: DatasetSummary, error_reason: str) -> ChartSpec:
-        """Deterministic fallback recommendation if Gemini API is unreachable or fails."""
+        """Deterministic fallback recommendation if Gemini API is unreachable or rate limited."""
         cols = summary.columns
         col_types = summary.column_types
+
+        # Format user-friendly fallback reason
+        if "429" in error_reason or "RESOURCE_EXHAUSTED" in error_reason or "quota" in error_reason.lower():
+            clean_reason = "Gemini 2.5 Flash free-tier rate limit reached (20 requests/day limit on free keys). Automatically applied statistical heuristic recommendation."
+        else:
+            clean_reason = "Gemini API unavailable. Automatically applied statistical heuristic recommendation."
 
         # Identify column types
         datetime_cols = [c for c, t in col_types.items() if t == "datetime"]
@@ -142,7 +148,7 @@ You are an expert data visualization architect. Analyze the dataset summary belo
             fig_width=10.0,
             fig_height=6.0,
             show_grid=True,
-            reasoning=f"Automatic heuristic recommendation (Fallback reason: {error_reason[:100]})."
+            reasoning=clean_reason
         )
 
 # Global singleton instance

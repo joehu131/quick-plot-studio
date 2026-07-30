@@ -39,34 +39,34 @@ export default function ExportToolbar({ datasetId, spec }: ExportToolbarProps) {
   };
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-sm flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center space-x-2">
-        <Download className="w-4 h-4 text-indigo-400" />
-        <span className="text-xs font-semibold text-slate-300">Export Options:</span>
+    <div className="bg-[#F8F9FA] border border-zinc-200 rounded-lg p-3 shadow-sm flex flex-wrap items-center justify-between gap-2.5 font-mono">
+      <div className="flex items-center space-x-1.5">
+        <Download className="w-3.5 h-3.5 text-[#E27C52]" />
+        <span className="text-xs font-bold text-zinc-800">Export:</span>
       </div>
 
       <div className="flex items-center space-x-2">
         <button
           onClick={() => handleDownload("png")}
-          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-md shadow-indigo-600/20"
+          className="px-2.5 py-1 rounded bg-[#E27C52] hover:bg-[#D46B41] text-white text-xs font-bold flex items-center space-x-1 transition-colors shadow-2xs"
         >
           <ImageIcon className="w-3.5 h-3.5" />
-          <span>Download PNG</span>
+          <span>PNG (150 DPI)</span>
         </button>
 
         <button
           onClick={() => handleDownload("svg")}
-          className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+          className="px-2.5 py-1 rounded bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-bold flex items-center space-x-1 transition-colors shadow-2xs"
         >
-          <Download className="w-3.5 h-3.5" />
-          <span>Download SVG</span>
+          <Download className="w-3.5 h-3.5 text-zinc-600" />
+          <span>SVG</span>
         </button>
 
         <button
           onClick={handleDownloadJsonSpec}
-          className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium flex items-center space-x-1.5 transition-colors"
+          className="px-2.5 py-1 rounded bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200 text-xs font-semibold flex items-center space-x-1 transition-colors shadow-2xs"
         >
-          <FileCode className="w-3.5 h-3.5 text-indigo-400" />
+          <FileCode className="w-3.5 h-3.5 text-[#E27C52]" />
           <span>JSON Spec</span>
         </button>
       </div>

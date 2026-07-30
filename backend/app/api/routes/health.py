@@ -8,5 +8,6 @@ def health_check():
     return {
         "status": "ok",
         "project": settings.PROJECT_NAME,
-        "version": settings.VERSION
+        "version": settings.VERSION,
+        "model": settings.GEMINI_MODEL
     }

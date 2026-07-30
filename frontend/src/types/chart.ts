@@ -15,21 +15,23 @@ export type AggregationType =
   | 'median';
 
 export type ColorPalette = 
+  | 'burnt_orange'
+  | 'Oranges'
   | 'viridis' 
   | 'magma' 
   | 'coolwarm' 
   | 'deep' 
   | 'muted' 
   | 'pastel' 
-  | 'dark' 
-  | 'rocket';
+  | 'crest' 
+  | 'flare';
 
 export type StyleTheme = 
-  | 'darkgrid' 
   | 'whitegrid' 
-  | 'dark' 
+  | 'ticks' 
   | 'white' 
-  | 'ticks';
+  | 'darkgrid' 
+  | 'dark';
 
 export interface ChartSpec {
   chart_type: ChartType;

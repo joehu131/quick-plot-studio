@@ -10,8 +10,8 @@ from app.models.chart_spec import (
     ChartSpec,
     ChartType,
     AggregationType,
-    ColorPalette,
-    StyleTheme,
+    Theme,
+    GridStyle,
     DatasetSummary
 )
 
@@ -143,8 +143,9 @@ You are an expert data visualization architect. Analyze the dataset summary belo
    - Use 'heatmap' for correlation matrix across numeric columns.
 2. Select `x_column` and `y_column` strictly from available columns: {summary.columns}.
 3. Pick an appropriate `aggregation` if grouping is needed (none, sum, mean, count, median).
-4. Provide a professional `title`, `x_label`, `y_label`, and `palette` (burnt_orange, Oranges, viridis, magma, coolwarm, deep, muted, pastel, crest, flare).
-5. Explain your architectural reasoning clearly in `reasoning`.
+4. Provide a professional `title`, `x_label`, `y_label`, and `theme` (Oranges, viridis, magma, coolwarm, deep, muted, pastel, crest, flare).
+5. Provide a `grid_style` (whitegrid, ticks, white, darkgrid, dark).
+6. Explain your architectural reasoning clearly in `reasoning`.
 """
 
     def _heuristic_fallback(self, summary: DatasetSummary, error_reason: str) -> ChartSpec:
@@ -203,8 +204,8 @@ You are an expert data visualization architect. Analyze the dataset summary belo
             aggregation=agg,
             x_label=x_col.replace("_", " ").title(),
             y_label=y_col.replace("_", " ").title() if y_col else "Count",
-            palette=ColorPalette.BURNT_ORANGE,
-            style_theme=StyleTheme.WHITEGRID,
+            theme=Theme.ORANGES,
+            grid_style=GridStyle.WHITEGRID,
             fig_width=10.0,
             fig_height=6.0,
             show_grid=True,

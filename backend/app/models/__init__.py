@@ -2,8 +2,8 @@ from app.models.chart_spec import (
     ChartSpec,
     ChartType,
     AggregationType,
-    ColorPalette,
-    StyleTheme,
+    Theme,
+    GridStyle,
     DatasetSummary,
 )
 
@@ -11,7 +11,7 @@ __all__ = [
     "ChartSpec",
     "ChartType",
     "AggregationType",
-    "ColorPalette",
-    "StyleTheme",
+    "Theme",
+    "GridStyle",
     "DatasetSummary",
 ]

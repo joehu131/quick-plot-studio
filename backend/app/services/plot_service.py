@@ -8,31 +8,31 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.colors as mcolors
 
-from app.models.chart_spec import ChartSpec, ChartType, AggregationType, ColorPalette, StyleTheme
+from app.models.chart_spec import ChartSpec, ChartType, AggregationType, Theme, GridStyle
 
 class PlotService:
-    def render_chart(self, df: pd.DataFrame, spec: ChartSpec, format: str = "png") -> bytes:
-        """Renders a chart based on ChartSpec and DataFrame with dynamic theme, reliable gridlines, and 300 DPI."""
+    def render_chart(self, df: pd.DataFrame, spec: ChartSpec, format: str = "png", dpi: int = 300) -> bytes:
+        """Renders a chart based on ChartSpec and DataFrame with dynamic grid style, reliable gridlines, and customizable DPI."""
         plot_df = self._prepare_data(df, spec)
 
-        # Resolve Theme Colors based on spec.style_theme
-        is_dark_theme = spec.style_theme in [StyleTheme.DARKGRID, StyleTheme.DARK]
+        # Resolve Theme Colors based on spec.grid_style
+        is_dark_theme = spec.grid_style in [GridStyle.DARKGRID, GridStyle.DARK]
 
         if is_dark_theme:
-            BG_COLOR = "#09090B" if spec.style_theme == StyleTheme.DARK else "#18181B"
+            BG_COLOR = "#09090B" if spec.grid_style == GridStyle.DARK else "#18181B"
             TEXT_COLOR = "#F4F4F5"
             MUTED_TEXT = "#A1A1AA"
             GRID_COLOR = "#27272A"
             BORDER_COLOR = "#3F3F46"
         else:
-            BG_COLOR = "#FFFFFF" if spec.style_theme in [StyleTheme.WHITE, StyleTheme.TICKS] else "#F8F9FA"
+            BG_COLOR = "#FFFFFF" if spec.grid_style in [GridStyle.WHITE, GridStyle.TICKS] else "#F8F9FA"
             TEXT_COLOR = "#27272A"
             MUTED_TEXT = "#71717A"
             GRID_COLOR = "#E4E4E7"
             BORDER_COLOR = "#D4D4D8"
 
         # Apply Seaborn aesthetic dynamic theme
-        seaborn_style = spec.style_theme.value  # 'whitegrid', 'ticks', 'white', 'darkgrid', 'dark'
+        seaborn_style = spec.grid_style.value  # 'whitegrid', 'ticks', 'white', 'darkgrid', 'dark'
         sns.set_theme(style=seaborn_style, rc={
             "axes.facecolor": BG_COLOR,
             "figure.facecolor": BG_COLOR,
@@ -56,31 +56,17 @@ class PlotService:
             group_col = spec.hue_column or spec.x_column
             n_cats = plot_df[group_col].nunique() if (group_col and group_col in plot_df.columns) else 1
 
-            palette_colors = self._get_palette_colors(spec.palette, plot_df, spec, n_cats)
+            palette_colors = self._get_palette_colors(spec.theme, plot_df, spec, n_cats)
 
             if spec.chart_type == ChartType.BAR:
-                if spec.palette == ColorPalette.BURNT_ORANGE and not spec.hue_column:
-                    n_bars = len(plot_df)
-                    cmap = mcolors.LinearSegmentedColormap.from_list("burnt_orange_grad", ["#F4B393", "#E27C52", "#C85E34"])
-                    bar_colors = [cmap(i / max(1, n_bars - 1)) for i in range(n_bars)]
-                    sns.barplot(
-                        data=plot_df,
-                        x=spec.x_column,
-                        y=spec.y_column,
-                        hue=spec.x_column,
-                        palette=bar_colors,
-                        legend=False,
-                        ax=ax
-                    )
-                else:
-                    color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column, spec.x_column)
-                    sns.barplot(
-                        data=plot_df,
-                        x=spec.x_column,
-                        y=spec.y_column,
-                        ax=ax,
-                        **color_kwargs
-                    )
+                color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column, spec.x_column)
+                sns.barplot(
+                    data=plot_df,
+                    x=spec.x_column,
+                    y=spec.y_column,
+                    ax=ax,
+                    **color_kwargs
+                )
             elif spec.chart_type == ChartType.LINE:
                 color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column)
                 sns.lineplot(
@@ -156,10 +142,16 @@ class PlotService:
 
             plt.tight_layout()
 
-            # Save to buffer at High DPI 300
+            # Save to buffer at requested DPI
             buf = io.BytesIO()
-            file_format = "svg" if format.lower() == "svg" else "png"
-            fig.savefig(buf, format=file_format, dpi=300, bbox_inches='tight', facecolor=BG_COLOR)
+            fmt_clean = format.lower().strip()
+            if fmt_clean in ["jpg", "jpeg"]:
+                file_format = "jpeg"
+            elif fmt_clean == "svg":
+                file_format = "svg"
+            else:
+                file_format = "png"
+            fig.savefig(buf, format=file_format, dpi=dpi, bbox_inches='tight', facecolor=BG_COLOR)
             buf.seek(0)
             return buf.getvalue()
 
@@ -167,14 +159,14 @@ class PlotService:
             plt.close(fig)
             plt.close('all')
 
-    def _get_palette_colors(self, palette: ColorPalette, df: pd.DataFrame, spec: ChartSpec, n_cats: int = 1):
+    def _get_palette_colors(self, theme: Theme, df: pd.DataFrame, spec: ChartSpec, n_cats: int = 1):
         """Resolves custom burnt orange or Seaborn color palettes, matched to category count."""
-        if palette == ColorPalette.BURNT_ORANGE:
-            base_colors = ["#E27C52", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"]
-            if n_cats <= len(base_colors):
-                return base_colors[:n_cats]
-            return [base_colors[i % len(base_colors)] for i in range(n_cats)]
-        return palette.value
+        palette_list = list(sns.color_palette(theme.value, n_colors=max(n_cats, 6)))
+        if n_cats == 1:
+            if theme.value in ["Oranges", "crest", "flare"]:
+                return [palette_list[3]]
+            return [palette_list[0]]
+        return palette_list[:n_cats]
 
     def _resolve_color_args(self, palette_colors, hue_column, default_x=None):
         """Returns kwargs dict (hue, palette, color, legend) to eliminate Seaborn warnings."""
@@ -184,9 +176,9 @@ class PlotService:
             return {"hue": default_x, "palette": palette_colors, "legend": False}
         if isinstance(palette_colors, list) and len(palette_colors) > 0:
             return {"color": palette_colors[0]}
-        if isinstance(palette_colors, str) and palette_colors.startswith("#"):
+        if isinstance(palette_colors, (str, tuple)):
             return {"color": palette_colors}
-        return {"palette": palette_colors}
+        return {"color": palette_colors}
 
     def _prepare_data(self, df: pd.DataFrame, spec: ChartSpec) -> pd.DataFrame:
         """Applies grouping & aggregations if specified in ChartSpec."""
@@ -214,10 +206,11 @@ class PlotService:
         else:
             data_series = df[spec.x_column].value_counts().head(8)
 
-        if isinstance(palette_colors, str):
-            colors = sns.color_palette(palette_colors, len(data_series))
+        n_wedges = len(data_series)
+        if isinstance(palette_colors, list) and len(palette_colors) >= n_wedges:
+            colors = palette_colors[:n_wedges]
         else:
-            colors = palette_colors[:len(data_series)]
+            colors = sns.color_palette(spec.theme.value, n_wedges)
 
         wedges, texts, autotexts = ax.pie(
             data_series,
@@ -236,7 +229,12 @@ class PlotService:
     def _render_heatmap(self, df: pd.DataFrame, spec: ChartSpec, ax: plt.Axes):
         """Helper to render a correlation or pivot heatmap."""
         numeric_df = df.select_dtypes(include=['number'])
-        cmap = "Oranges" if spec.palette == ColorPalette.BURNT_ORANGE else spec.palette.value
+        palette_name = spec.theme.value
+        try:
+            cmap = sns.color_palette(palette_name, as_cmap=True)
+        except Exception:
+            cmap = mcolors.ListedColormap(sns.color_palette(palette_name))
+
         if not numeric_df.empty and len(numeric_df.columns) > 1:
             sns.heatmap(
                 numeric_df.corr(),

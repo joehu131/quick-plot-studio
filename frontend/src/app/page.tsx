@@ -17,6 +17,9 @@ import {
 import { SAMPLE_DATASETS } from "@/lib/sample-data";
 import ToastBanner from "@/components/ToastBanner";
 
+import { Table } from "lucide-react";
+import DatasetPreviewModal from "@/components/DatasetPreviewModal";
+
 export default function Home() {
   const [summary, setSummary] = useState<DatasetSummary | null>(null);
   const [spec, setSpec] = useState<ChartSpec | null>(null);
@@ -28,6 +31,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const renderAbortController = useRef<AbortController | null>(null);
 
@@ -156,6 +160,13 @@ export default function Home() {
               <span className="bg-white px-2 py-0.5 rounded border border-zinc-200 font-bold text-[#E27C52]">
                 {summary.row_count} rows × {summary.column_count} cols
               </span>
+              <button
+                onClick={() => setIsPreviewOpen(true)}
+                className="flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded bg-white hover:bg-[#E27C52]/10 text-[#E27C52] border border-[#E27C52]/30 transition-colors cursor-pointer"
+              >
+                <Table className="w-3 h-3" />
+                <span>Preview Data</span>
+              </button>
             </div>
             <div className="flex items-center space-x-1.5 flex-wrap">
               <span className="text-zinc-500 font-medium">Columns:</span>
@@ -197,13 +208,20 @@ export default function Home() {
               error={error}
             />
 
-            <ExportToolbar datasetId={summary?.dataset_id || null} spec={spec} />
+            <ExportToolbar datasetId={summary?.dataset_id || null} spec={spec} summary={summary} />
           </div>
         </div>
+
+        {/* Dataset Preview Modal */}
+        <DatasetPreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          summary={summary}
+        />
       </main>
 
       <footer className="border-t border-zinc-200 py-3 text-center text-[11px] font-mono text-zinc-500 bg-[#F8F9FA] space-y-1">
-        <div>AiCharter | Analytics Engine (FastAPI, Next.js, Seaborn & Multi-Model Engine)</div>
+        <div>QuickPlot Studio | Analytics Engine (FastAPI, Next.js, Seaborn & Multi-Model Engine)</div>
         <div className="text-zinc-600 font-semibold">Built by: Joel Hultman 2026</div>
       </footer>
     </div>

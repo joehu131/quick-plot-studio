@@ -18,8 +18,7 @@ class AggregationType(str, Enum):
     COUNT = "count"
     MEDIAN = "median"
 
-class ColorPalette(str, Enum):
-    BURNT_ORANGE = "burnt_orange"
+class Theme(str, Enum):
     ORANGES = "Oranges"
     VIRIDIS = "viridis"
     MAGMA = "magma"
@@ -30,7 +29,7 @@ class ColorPalette(str, Enum):
     CREST = "crest"
     FLARE = "flare"
 
-class StyleTheme(str, Enum):
+class GridStyle(str, Enum):
     WHITEGRID = "whitegrid"
     TICKS = "ticks"
     WHITE = "white"
@@ -70,13 +69,13 @@ class ChartSpec(BaseModel):
         ...,
         description="Label text displayed on the Y-axis."
     )
-    palette: ColorPalette = Field(
-        default=ColorPalette.BURNT_ORANGE,
+    theme: Theme = Field(
+        default=Theme.ORANGES,
         description="Color palette theme for chart elements."
     )
-    style_theme: StyleTheme = Field(
-        default=StyleTheme.WHITEGRID,
-        description="Seaborn background style theme."
+    grid_style: GridStyle = Field(
+        default=GridStyle.WHITEGRID,
+        description="Background style and gridlines layout."
     )
     fig_width: float = Field(
         default=10.0,

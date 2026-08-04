@@ -1,4 +1,4 @@
-# AiCharter
+# QuickPlot Studio
 
 A dataset visualizer that turns CSV files into statistical charts using AI-driven chart specification and server-side rendering with Seaborn/Matplotlib.
 
@@ -30,7 +30,7 @@ Upload a CSV (or pick a preset), let Gemini suggest a chart spec, tweak it in re
 - **Multi-model support** — Switch between Gemini 3.5 Flash Lite, Gemini 3.6 Flash, Gemma-4-26b, or a rule-based fallback (no AI).
 - **Automatic rate-limit fallback** — If Gemini returns a 429, the backend retries with Gemma-4 before falling back to deterministic rules.
 - **Structured AI output** — Gemini returns a typed `ChartSpec` JSON validated by Pydantic. No AI-generated code is executed.
-- **Live spec editing** — Form controls populate with the AI recommendation. Adjust titles, palettes, style themes, aggregations, and axes without re-calling the LLM (debounced re-renders, sub-50ms).
+- **Live spec editing** — Form controls populate with the AI recommendation. Adjust titles, themes, grid/background styles, aggregations, and axes without re-calling the LLM (debounced re-renders, sub-50ms).
 - **300 DPI rendering** — Charts render server-side in a Matplotlib BytesIO buffer at 300 DPI with click-to-zoom fullscreen view.
 - **Session-based uploads** — `POST /api/upload` returns a `dataset_id`. Subsequent render calls send only the ID + spec, avoiding redundant data transfer.
 - **Export** — Download as 300 DPI PNG, vector SVG, or the raw JSON chart spec.
@@ -93,7 +93,7 @@ Application settings in `backend/app/config.py`
 - **`backend/app/config.py`** — Defaults:
   ```python
   GEMINI_MODEL: str = "gemini-3.5-flash-lite"
-  PROJECT_NAME: str = "AiCharter API"
+  PROJECT_NAME: str = "QuickPlot Studio API"
   API_PREFIX: str = "/api"
   MAX_UPLOAD_SIZE_MB: int = 5
   ```
@@ -111,8 +111,8 @@ Application settings in `backend/app/config.py`
 ### 1. Clone and configure
 
 ```bash
-git clone git@github.com:joehu131/AiCharter.git
-cd AiCharter
+git clone git@github.com:joehu131/QuickPlotStudio.git
+cd QuickPlotStudio
 
 echo "GEMINI_API_KEY=your_actual_gemini_api_key" > backend/.env
 ```

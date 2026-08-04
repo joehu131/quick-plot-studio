@@ -1,3 +1,4 @@
+import concurrent.futures
 import json
 import logging
 from typing import Optional
@@ -31,7 +32,7 @@ class AIService:
         return self._client
 
     def analyze_dataset(self, summary: DatasetSummary, model: Optional[str] = None) -> ChartSpec:
-        """Analyzes a dataset summary using requested AI model, Gemma fallback on 429, or Rule-Based Engine."""
+        """Analyzes a dataset summary using requested AI model, Gemma fallback on 429/503/timeout, or Rule-Based Engine."""
         target_model = model or settings.GEMINI_MODEL
 
         # Check if user requested pure rule-based heuristic engine
@@ -39,26 +40,60 @@ class AIService:
             logger.info("User selected Rule-Based Engine. Returning heuristic fallback spec.")
             return self._heuristic_fallback(summary, "User selected Rule-Based Engine (No AI)")
 
-        # 1. Primary Model Attempt
+        # 1. Primary Model Attempt with Timeout
         try:
-            return self._call_model(summary, target_model)
+            return self._call_model_with_timeout(summary, target_model)
         except Exception as primary_error:
             err_str = str(primary_error)
-            logger.warning(f"Primary model '{target_model}' failed: {err_str}")
+            err_summary = self._format_error_summary(err_str)
+            logger.warning(f"Primary model '{target_model}' failed ({err_summary}): {err_str}")
 
-            # 2. Automatic Fallback to Gemma-4 on 429 / Rate Limit
-            is_rate_limit = any(keyword in err_str.lower() for keyword in ["429", "resource_exhausted", "quota", "rate limit"])
-            if is_rate_limit and target_model != "gemma-4-26b-a4b-it":
-                logger.info("Rate limit hit on primary model. Attempting secondary AI fallback to 'gemma-4-26b-a4b-it'...")
+            # 2. Automatic Fallback to Gemma-4 on primary model error (timeout, 503, 429, 500, etc.)
+            if target_model != "gemma-4-26b-a4b-it":
+                logger.info(f"Primary model '{target_model}' failed ({err_summary}). Attempting secondary AI fallback to 'gemma-4-26b-a4b-it'...")
                 try:
-                    gemma_spec = self._call_model(summary, "gemma-4-26b-a4b-it")
-                    gemma_spec.reasoning = f"(Auto-fallback from {target_model} rate limit to Gemma 4 26B): {gemma_spec.reasoning}"
+                    gemma_spec = self._call_model_with_timeout(summary, "gemma-4-26b-a4b-it")
+                    gemma_spec.reasoning = (
+                        f"[Fallback: Primary model '{target_model}' failed ({err_summary}). Switched to Gemma 4 26B] "
+                        f"{gemma_spec.reasoning}"
+                    )
                     return gemma_spec
                 except Exception as gemma_error:
-                    logger.warning(f"Gemma fallback model also failed: {gemma_error}")
+                    gemma_err_summary = self._format_error_summary(str(gemma_error))
+                    logger.warning(f"Gemma fallback model also failed ({gemma_err_summary}): {gemma_error}")
+                    err_summary = f"{err_summary} & Gemma 4 ({gemma_err_summary})"
 
             # 3. Deterministic Statistical Fallback
-            return self._heuristic_fallback(summary, err_str)
+            return self._heuristic_fallback(summary, err_summary)
+
+    def _call_model_with_timeout(self, summary: DatasetSummary, model_name: str) -> ChartSpec:
+        """Executes _call_model with a strict timeout specified by settings.AI_API_TIMEOUT_SECONDS."""
+        timeout = settings.AI_API_TIMEOUT_SECONDS
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(self._call_model, summary, model_name)
+            try:
+                return future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                raise TimeoutError(f"Model '{model_name}' timed out after {timeout:.1f}s")
+
+    def _format_error_summary(self, err_str: str) -> str:
+        """Extracts concise, user-friendly error category from API exception string."""
+        err_lower = err_str.lower()
+        if "timed out" in err_lower or "timeout" in err_lower:
+            return f"504 GATEWAY TIMEOUT: Timeout (> {settings.AI_API_TIMEOUT_SECONDS:.0f}s)"
+        if "503" in err_str or "unavailable" in err_lower:
+            return "503 UNAVAILABLE: High Demand"
+        if "429" in err_str or "resource_exhausted" in err_lower or "quota" in err_lower:
+            return "429 RATE LIMIT: Quota Exceeded"
+        if "500" in err_str or "internal" in err_lower:
+            return "500 INTERNAL SERVER ERROR"
+        if "502" in err_str or "bad gateway" in err_lower:
+            return "502 BAD GATEWAY"
+        if "403" in err_str or "permission" in err_lower:
+            return "403 FORBIDDEN"
+        if "400" in err_str or "invalid" in err_lower:
+            return "400 BAD REQUEST"
+        return "API Connection Error"
 
     def _call_model(self, summary: DatasetSummary, model_name: str) -> ChartSpec:
         """Executes Google GenAI API call with structured JSON response schema."""
@@ -120,10 +155,8 @@ You are an expert data visualization architect. Analyze the dataset summary belo
         # Format user-friendly fallback reason
         if "Rule-Based Engine" in error_reason:
             clean_reason = "Rule-Based Engine (No AI): Applied deterministic statistical rules."
-        elif "429" in error_reason or "RESOURCE_EXHAUSTED" in error_reason or "quota" in error_reason.lower():
-            clean_reason = "Gemini API rate limit reached. Automatically applied statistical heuristic recommendation."
         else:
-            clean_reason = "AI API unavailable. Automatically applied statistical heuristic recommendation."
+            clean_reason = f"[Fallback: AI models unavailable ({error_reason}). Applied statistical heuristic recommendation]"
 
         # Identify column types
         datetime_cols = [c for c, t in col_types.items() if t == "datetime"]

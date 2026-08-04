@@ -53,7 +53,10 @@ class PlotService:
         ax.set_axisbelow(True)
 
         try:
-            palette_colors = self._get_palette_colors(spec.palette, plot_df, spec)
+            group_col = spec.hue_column or spec.x_column
+            n_cats = plot_df[group_col].nunique() if (group_col and group_col in plot_df.columns) else 1
+
+            palette_colors = self._get_palette_colors(spec.palette, plot_df, spec, n_cats)
 
             if spec.chart_type == ChartType.BAR:
                 if spec.palette == ColorPalette.BURNT_ORANGE and not spec.hue_column:
@@ -64,56 +67,58 @@ class PlotService:
                         data=plot_df,
                         x=spec.x_column,
                         y=spec.y_column,
+                        hue=spec.x_column,
                         palette=bar_colors,
+                        legend=False,
                         ax=ax
                     )
                 else:
+                    color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column, spec.x_column)
                     sns.barplot(
                         data=plot_df,
                         x=spec.x_column,
                         y=spec.y_column,
-                        hue=spec.hue_column,
-                        palette=palette_colors,
-                        ax=ax
+                        ax=ax,
+                        **color_kwargs
                     )
             elif spec.chart_type == ChartType.LINE:
+                color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column)
                 sns.lineplot(
                     data=plot_df,
                     x=spec.x_column,
                     y=spec.y_column,
-                    hue=spec.hue_column,
-                    palette=palette_colors,
                     marker="o",
                     linewidth=2.5,
-                    ax=ax
+                    ax=ax,
+                    **color_kwargs
                 )
             elif spec.chart_type == ChartType.SCATTER:
+                color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column)
                 sns.scatterplot(
                     data=plot_df,
                     x=spec.x_column,
                     y=spec.y_column,
-                    hue=spec.hue_column,
-                    palette=palette_colors,
                     s=60,
-                    ax=ax
+                    ax=ax,
+                    **color_kwargs
                 )
             elif spec.chart_type == ChartType.HISTOGRAM:
+                color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column)
                 sns.histplot(
                     data=plot_df,
                     x=spec.x_column,
-                    hue=spec.hue_column,
-                    palette=palette_colors,
                     kde=True,
-                    ax=ax
+                    ax=ax,
+                    **color_kwargs
                 )
             elif spec.chart_type == ChartType.BOX:
+                color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column, spec.x_column)
                 sns.boxplot(
                     data=plot_df,
                     x=spec.x_column,
                     y=spec.y_column,
-                    hue=spec.hue_column,
-                    palette=palette_colors,
-                    ax=ax
+                    ax=ax,
+                    **color_kwargs
                 )
             elif spec.chart_type == ChartType.PIE:
                 self._render_pie(plot_df, spec, ax, palette_colors, BG_COLOR, TEXT_COLOR)
@@ -162,11 +167,26 @@ class PlotService:
             plt.close(fig)
             plt.close('all')
 
-    def _get_palette_colors(self, palette: ColorPalette, df: pd.DataFrame, spec: ChartSpec):
-        """Resolves custom burnt orange or Seaborn color palettes."""
+    def _get_palette_colors(self, palette: ColorPalette, df: pd.DataFrame, spec: ChartSpec, n_cats: int = 1):
+        """Resolves custom burnt orange or Seaborn color palettes, matched to category count."""
         if palette == ColorPalette.BURNT_ORANGE:
-            return ["#E27C52", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"]
+            base_colors = ["#E27C52", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"]
+            if n_cats <= len(base_colors):
+                return base_colors[:n_cats]
+            return [base_colors[i % len(base_colors)] for i in range(n_cats)]
         return palette.value
+
+    def _resolve_color_args(self, palette_colors, hue_column, default_x=None):
+        """Returns kwargs dict (hue, palette, color, legend) to eliminate Seaborn warnings."""
+        if hue_column:
+            return {"hue": hue_column, "palette": palette_colors}
+        if default_x:
+            return {"hue": default_x, "palette": palette_colors, "legend": False}
+        if isinstance(palette_colors, list) and len(palette_colors) > 0:
+            return {"color": palette_colors[0]}
+        if isinstance(palette_colors, str) and palette_colors.startswith("#"):
+            return {"color": palette_colors}
+        return {"palette": palette_colors}
 
     def _prepare_data(self, df: pd.DataFrame, spec: ChartSpec) -> pd.DataFrame:
         """Applies grouping & aggregations if specified in ChartSpec."""

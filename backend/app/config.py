@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-3.5-flash-lite"
     MAX_UPLOAD_SIZE_MB: int = 5
     DATASET_CACHE_TTL_SECONDS: int = 3600
+    AI_API_TIMEOUT_SECONDS: float = 3.0
 
     model_config = SettingsConfigDict(
         env_file=".env",

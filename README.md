@@ -4,9 +4,29 @@ A dataset visualizer that turns CSV files into statistical charts using AI-drive
 
 Upload a CSV (or pick a preset), let Gemini suggest a chart spec, tweak it in real time, and export the result as a high-res PNG, SVG, or raw JSON spec.
 
-<p align="center">
-<img src="docs/app_screenshot.png" alt="App screenshot" width="600">
-</p>
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/revenue_trends_over_time_by_product_category.svg" alt="Revenue Trends over Time" width="100%">
+      <br><b>Revenue Trends over Time</b>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/total_epoch_by_architecture.svg" alt="Total Epoch by Architecture" width="100%">
+      <br><b>Total Epoch by Architecture</b>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/relationship_between_sepal_length_and_sepal_width_by_species.svg" alt="Sepal Length vs Width" width="100%">
+      <br><b>Sepal Length vs Width (Scatter)</b>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/relationship_between_sepal_length_and_sepal_width_by_species (1).svg" alt="Sepal Metrics Distribution" width="100%">
+      <br><b>Sepal Metrics Distribution</b>
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## Features

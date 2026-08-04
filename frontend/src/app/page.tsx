@@ -15,6 +15,7 @@ import {
   fetchRenderBlob,
 } from "@/lib/api-client";
 import { SAMPLE_DATASETS } from "@/lib/sample-data";
+import ToastBanner from "@/components/ToastBanner";
 
 export default function Home() {
   const [summary, setSummary] = useState<DatasetSummary | null>(null);
@@ -143,6 +144,9 @@ export default function Home() {
           onUploadText={handleUploadText}
           isLoading={isLoadingData || isAnalyzing}
         />
+
+        {/* Toast Notification Banner for Fallbacks */}
+        <ToastBanner reasoning={spec?.reasoning} />
 
         {/* Dataset Meta Banner */}
         {summary && (

@@ -4,6 +4,9 @@ A dataset visualizer that turns CSV files into statistical charts using AI-drive
 
 Upload a CSV (or pick a preset), let Gemini suggest a chart spec, tweak it in real time, and export the result as a high-res PNG, SVG, or raw JSON spec.
 
+<p align="center">
+<img src="docs/app_screenshot.png" alt="App screenshot" width="600">
+</p>
 ---
 
 ## Features
@@ -56,20 +59,20 @@ sequenceDiagram
 
 | Layer | Tools |
 |-------|-------|
-| Backend | Python 3.12, FastAPI, Pandas, Matplotlib, Seaborn, Pydantic v2, `google-genai` SDK, Pytest |
-| Frontend | Next.js 15 (React 19), Tailwind CSS, TypeScript, Lucide Icons |
-| AI | Gemini 3.5 Flash Lite, Gemini 3.6 Flash, Gemma-4-26b, rule-based engine |
-| Infra | Docker, Docker Compose, GitHub Actions CI/CD |
+| Backend | `Python 3.12`, `FastAPI`, `Pandas`, `Matplotlib`, `Seaborn`, `Pydantic v2`, `google-genai SDK`, `Pytest` |
+| Frontend | `Next.js 15 (React 19)`, `Tailwind CSS`, `TypeScript`, `Lucide Icons` |
+| AI | `Gemini 3.5 Flash Lite`, `Gemini 3.6 Flash`, `Gemma-4-26b`, `Rule-based engine` |
+| Infra | `Docker`, `Docker Compose`, `GitHub Actions CI/CD` |
 
 ---
 
 ## Configuration
 
-Application settings live in `backend/app/config.py` (single source of truth).
+Application settings in `backend/app/config.py`
 
-- **`backend/.env`** — Secrets only:
+- **`backend/.env`** — Secrets:
   ```env
-  GEMINI_API_KEY=your_actual_gemini_api_key
+  GEMINI_API_KEY=your_gemini_api_key
   ```
 - **`backend/app/config.py`** — Defaults:
   ```python

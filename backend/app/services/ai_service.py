@@ -1,6 +1,7 @@
 import concurrent.futures
 import json
 import logging
+import time
 from typing import Optional
 from google import genai
 from google.genai import types
@@ -31,6 +32,10 @@ class AIService:
             self._client = genai.Client(api_key=api_key)
         return self._client
 
+    def _log_pipeline(self, message: str):
+        if settings.DEBUG:
+            print(f"[AI Pipeline] {message}", flush=True)
+
     def analyze_dataset(self, summary: DatasetSummary, model: Optional[str] = None) -> ChartSpec:
         """Analyzes a dataset summary using requested AI model, Gemma fallback on 429/503/timeout, or Rule-Based Engine."""
         target_model = model or settings.GEMINI_MODEL
@@ -38,6 +43,7 @@ class AIService:
         # Check if user requested pure rule-based heuristic engine
         if target_model in ["rule-based", "rule_based", "Rule-Based Engine (No AI)"]:
             logger.info("User selected Rule-Based Engine. Returning heuristic fallback spec.")
+            self._log_pipeline("Rule-Based Engine selected (No AI API call). Returning heuristic spec.")
             return self._heuristic_fallback(summary, "User selected Rule-Based Engine (No AI)")
 
         # 1. Primary Model Attempt with Timeout
@@ -46,10 +52,12 @@ class AIService:
         except Exception as primary_error:
             err_str = str(primary_error)
             err_summary = self._format_error_summary(err_str)
+            self._log_pipeline(f"WARNING: Primary model '{target_model}' failed ({err_summary}): {err_str}")
             logger.warning(f"Primary model '{target_model}' failed ({err_summary}): {err_str}")
 
             # 2. Automatic Fallback to Gemma-4 on primary model error (timeout, 503, 429, 500, etc.)
             if target_model != "gemma-4-26b-a4b-it":
+                self._log_pipeline("FALLBACK: Retrying with secondary model 'gemma-4-26b-a4b-it'...")
                 logger.info(f"Primary model '{target_model}' failed ({err_summary}). Attempting secondary AI fallback to 'gemma-4-26b-a4b-it'...")
                 try:
                     gemma_spec = self._call_model_with_timeout(summary, "gemma-4-26b-a4b-it")
@@ -60,21 +68,32 @@ class AIService:
                     return gemma_spec
                 except Exception as gemma_error:
                     gemma_err_summary = self._format_error_summary(str(gemma_error))
+                    self._log_pipeline(f"WARNING: Gemma fallback model also failed ({gemma_err_summary}): {gemma_error}")
                     logger.warning(f"Gemma fallback model also failed ({gemma_err_summary}): {gemma_error}")
                     err_summary = f"{err_summary} & Gemma 4 ({gemma_err_summary})"
 
             # 3. Deterministic Statistical Fallback
+            self._log_pipeline(f"HEURISTIC FALLBACK: Returning deterministic statistical recommendation due to: {err_summary}")
             return self._heuristic_fallback(summary, err_summary)
 
     def _call_model_with_timeout(self, summary: DatasetSummary, model_name: str) -> ChartSpec:
         """Executes _call_model with a strict timeout specified by settings.AI_API_TIMEOUT_SECONDS."""
         timeout = settings.AI_API_TIMEOUT_SECONDS
+        start_time = time.time()
+        self._log_pipeline(f"Dispatching call to '{model_name}' (dataset: {summary.row_count} rows x {summary.column_count} cols, max timeout: {timeout:.1f}s)...")
+        
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(self._call_model, summary, model_name)
             try:
-                return future.result(timeout=timeout)
+                result = future.result(timeout=timeout)
+                elapsed = time.time() - start_time
+                self._log_pipeline(f"SUCCESS: Model '{model_name}' completed in {elapsed:.2f}s")
+                logger.info(f"Model '{model_name}' completed successfully in {elapsed:.2f}s")
+                return result
             except concurrent.futures.TimeoutError:
-                raise TimeoutError(f"Model '{model_name}' timed out after {timeout:.1f}s")
+                elapsed = time.time() - start_time
+                self._log_pipeline(f"TIMEOUT: Model '{model_name}' exceeded timeout limit ({elapsed:.2f}s > {timeout:.1f}s)")
+                raise TimeoutError(f"Model '{model_name}' timed out after {timeout:.1f}s (elapsed: {elapsed:.2f}s)")
 
     def _format_error_summary(self, err_str: str) -> str:
         """Extracts concise, user-friendly error category from API exception string."""

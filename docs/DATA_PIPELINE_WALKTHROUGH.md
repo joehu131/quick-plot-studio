@@ -76,6 +76,21 @@ Instead of asking AI for unverified Python code, FastAPI passes the `ChartSpec` 
 
 > **Safety & Guard**: `data_service.reconcile_chart_spec()` verifies that all column names inside the JSON (`Category`, `Revenue`, `Region`) actually exist in the Pandas DataFrame.
 
+### AI Timeout & Fallback Pipeline (`AI_API_TIMEOUT_SECONDS = 3.0`)
+
+To guarantee fast response times, every AI API call is wrapped in a thread-isolated timeout (`AI_API_TIMEOUT_SECONDS = 3.0` in `config.py`). If the primary model times out or returns an HTTP error (such as 503 UNAVAILABLE or 429 RATE LIMIT), the backend executes an automatic fallback sequence:
+
+```mermaid
+flowchart TD
+    A["1. User Request (POST /api/analyze)"] --> B["2. Primary Model Attempt\n(gemini-3.5-flash-lite, 3.0s limit)"]
+    B -- "Success (<3.0s)" --> F["Validated ChartSpec JSON"]
+    B -- "Timeout (>3.0s) or 503/429 Error" --> C["3. Secondary AI Fallback\n(gemma-4-26b-a4b-it, 3.0s limit)"]
+    C -- "Success (<3.0s)" --> F
+    C -- "Timeout (>3.0s) or Error" --> D["4. Heuristic Rule-Based Engine\n(Deterministic Statistical Rules)"]
+    D --> F
+    F --> E["Frontend Toast Banner Notification\n(Displays status code & fallback notice)"]
+```
+
 ---
 
 ## Step 4: Real-Time Form Controls Sync (`ChartControls.tsx`)

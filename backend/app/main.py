@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
@@ -9,10 +10,14 @@ app = FastAPI(
     description="Backend API for QuickPlot Studio — AI-Powered Dataset Visualizer"
 )
 
-# Configure CORS for Next.js frontend integration
+# CORS: reads ALLOWED_ORIGINS env var (comma-separated) in production.
+# Falls back to localhost for local development.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -27,7 +27,7 @@ export default function DocsModal({ isOpen, onClose }: DocsModalProps) {
             </div>
             <div>
               <h2 className="text-base font-bold text-zinc-900 font-mono tracking-tight">
-                How AiCharter Works
+                How QuickPlot Studio Works
               </h2>
               <p className="text-xs text-zinc-500 font-mono mt-0.5">
                 Data Transformation & Architecture Flowchart
@@ -49,7 +49,7 @@ export default function DocsModal({ isOpen, onClose }: DocsModalProps) {
           {/* Intro Text */}
           <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-2xs space-y-1.5">
             <p className="text-sm text-zinc-700 leading-relaxed">
-              <strong className="text-zinc-900 font-semibold">AiCharter</strong> is an intelligent data visualization engine. When a dataset is uploaded, Gemini AI scans the data profile and returns a <strong className="text-zinc-900 font-semibold">structured JSON specification</strong> (<code className="text-[#E27C52] font-mono text-xs">ChartSpec</code> schema) defining the chart type, suggested title, axis mappings, and color palette rather than executing unverified AI code.
+              <strong className="text-zinc-900 font-semibold">QuickPlot Studio</strong> is an intelligent data visualization engine. When a dataset is uploaded, Gemini AI scans the data profile and returns a <strong className="text-zinc-900 font-semibold">structured JSON specification</strong> (<code className="text-[#E27C52] font-mono text-xs">ChartSpec</code> schema) defining the chart type, suggested title, axis mappings, theme, and grid/background rather than executing unverified AI code.
             </p>
             <p className="text-sm text-zinc-700 leading-relaxed">
               Those JSON values populate the UI controls, allowing real-time customization with sub-50ms Matplotlib re-renders and crisp PNG/SVG downloads.
@@ -158,7 +158,7 @@ export default function DocsModal({ isOpen, onClose }: DocsModalProps) {
                 <div className="bg-zinc-50 border border-zinc-200 text-zinc-800 rounded p-2 text-left text-[10px] leading-tight font-mono">
                   <span className="text-[#E27C52] font-bold block"># Live React State</span>
                   <span className="text-zinc-700">x = <span className="text-emerald-700 font-semibold">"Date"</span> | y = <span className="text-emerald-700 font-semibold">"Revenue"</span></span>
-                  <span className="text-zinc-500 block">palette = <span className="text-[#E27C52] font-bold">"burnt_orange"</span></span>
+                  <span className="text-zinc-[#E27C52]">theme = <span className="text-[#E27C52] font-bold">"burnt_orange"</span></span>
                 </div>
               </div>
 

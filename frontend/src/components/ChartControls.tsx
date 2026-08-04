@@ -1,7 +1,8 @@
 "use client";
 
-import { SlidersHorizontal, Palette, Layout, Type, Layers, Info } from "lucide-react";
-import { ChartSpec, ChartType, AggregationType, ColorPalette, StyleTheme } from "@/types/chart";
+import { useState, useRef, useEffect } from "react";
+import { SlidersHorizontal, Palette, Layout, Type, Layers, Info, ChevronDown, Check } from "lucide-react";
+import { ChartSpec, ChartType, AggregationType, Theme, GridStyle } from "@/types/chart";
 
 interface ChartControlsProps {
   spec: ChartSpec;
@@ -11,6 +12,24 @@ interface ChartControlsProps {
   isAnalyzing: boolean;
 }
 
+interface ThemeOption {
+  id: Theme;
+  label: string;
+  colors: string[];
+}
+
+const THEME_OPTIONS: ThemeOption[] = [
+  { id: "Oranges", label: "Warm Oranges", colors: ["#FED976", "#FEB24C", "#FD8D3C", "#F16913", "#D94801"] },
+  { id: "viridis", label: "Viridis", colors: ["#440154", "#31688E", "#35B779", "#FDE725"] },
+  { id: "magma", label: "Magma", colors: ["#000004", "#51127C", "#B73779", "#FC8961", "#FECF92"] },
+  { id: "coolwarm", label: "Coolwarm", colors: ["#3B4CC0", "#8CBDFF", "#F2F2F2", "#F7A789", "#B40426"] },
+  { id: "deep", label: "Deep", colors: ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B3"] },
+  { id: "muted", label: "Muted", colors: ["#4878D0", "#EE854A", "#6ACC64", "#D65F5F", "#956CB4"] },
+  { id: "pastel", label: "Pastel", colors: ["#A1C9F4", "#FFB482", "#8DE5A1", "#FF9F9B", "#D0BBFF"] },
+  { id: "crest", label: "Crest", colors: ["#7EA6AC", "#57868D", "#3B6368", "#244247"] },
+  { id: "flare", label: "Flare", colors: ["#E59E80", "#E37466", "#D84A5B", "#B82766"] },
+];
+
 export default function ChartControls({
   spec,
   columns,
@@ -18,6 +37,9 @@ export default function ChartControls({
   onReAnalyze,
   isAnalyzing,
 }: ChartControlsProps) {
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
+
   const handleChange = (field: keyof ChartSpec, value: unknown) => {
     onChange({
       ...spec,
@@ -25,8 +47,21 @@ export default function ChartControls({
     });
   };
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setIsThemeOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const currentThemeObj = THEME_OPTIONS.find((t) => t.id === spec.theme) || THEME_OPTIONS[0];
+
   return (
-    <div className="bg-[#F8F9FA] border border-zinc-200 rounded-lg p-4 shadow-sm space-y-4">
+    <div className="bg-[#F8F9FA] border border-zinc-200 rounded-lg p-4 shadow-sm space-y-4 font-sans">
       {/* Header & AI Re-analyze button */}
       <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
         <div className="flex items-center space-x-2">
@@ -38,7 +73,7 @@ export default function ChartControls({
         <button
           onClick={onReAnalyze}
           disabled={isAnalyzing}
-          className="text-[11px] font-mono font-bold px-2.5 py-1 rounded bg-white hover:bg-[#E27C52]/5 text-[#E27C52] border border-[#E27C52]/30 transition-colors flex items-center space-x-1"
+          className="text-[11px] font-mono font-bold px-2.5 py-1 rounded bg-white hover:bg-[#E27C52]/5 text-[#E27C52] border border-[#E27C52]/30 transition-colors flex items-center space-x-1 cursor-pointer"
         >
           <span>Re-Analyze AI</span>
         </button>
@@ -150,43 +185,89 @@ export default function ChartControls({
         </select>
       </div>
 
-      {/* Grid Row 3: Palette & Style Theme */}
+      {/* Grid Row 3: Custom Theme Dropdown with Pill Swatches & Grid/Background */}
       <div className="grid grid-cols-2 gap-2.5">
-        <div>
+        
+        {/* Custom Theme Selector with Pill Color Swatches */}
+        <div className="relative" ref={themeDropdownRef}>
           <label className="block text-xs font-mono font-medium text-zinc-600 mb-1 flex items-center space-x-1">
             <Palette className="w-3 h-3 text-[#E27C52]" />
-            <span>Color Palette</span>
+            <span>Theme</span>
           </label>
-          <select
-            value={spec.palette}
-            onChange={(e) => handleChange("palette", e.target.value as ColorPalette)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+          
+          <button
+            type="button"
+            onClick={() => setIsThemeOpen(!isThemeOpen)}
+            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono flex items-center justify-between transition-colors cursor-pointer shadow-2xs"
           >
-            <option value="burnt_orange">Burnt Orange</option>
-            <option value="Oranges">Warm Oranges</option>
-            <option value="viridis">Viridis</option>
-            <option value="magma">Magma</option>
-            <option value="coolwarm">Coolwarm</option>
-            <option value="deep">Deep</option>
-            <option value="muted">Muted</option>
-            <option value="pastel">Pastel</option>
-            <option value="crest">Crest</option>
-            <option value="flare">Flare</option>
-          </select>
+            <span className="truncate">{currentThemeObj.label}</span>
+
+            <div className="flex items-center space-x-1.5 ml-2">
+              {/* Elegant Pill Preview */}
+              <div className="flex items-center space-x-0.5 bg-zinc-100 border border-zinc-200 rounded-full px-1.5 py-0.5 shadow-2xs">
+                {currentThemeObj.colors.map((c, i) => (
+                  <span
+                    key={i}
+                    className="w-2 h-2 rounded-full border border-black/10 shrink-0"
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isThemeOpen ? "rotate-180" : ""}`} />
+            </div>
+          </button>
+
+          {/* Theme Dropdown Popover */}
+          {isThemeOpen && (
+            <div className="absolute left-0 top-full mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-xl z-40 py-1 font-mono text-xs overflow-hidden max-h-60 overflow-y-auto divide-y divide-zinc-100">
+              {THEME_OPTIONS.map((themeObj) => {
+                const isSelected = themeObj.id === spec.theme;
+                return (
+                  <div
+                    key={themeObj.id}
+                    onClick={() => {
+                      handleChange("theme", themeObj.id);
+                      setIsThemeOpen(false);
+                    }}
+                    className={`px-2.5 py-2 flex items-center justify-between cursor-pointer transition-colors ${
+                      isSelected ? "bg-[#E27C52]/10 font-bold text-[#E27C52]" : "hover:bg-[#F8F9FA] text-zinc-800"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1.5 truncate">
+                      {isSelected && <Check className="w-3 h-3 text-[#E27C52] shrink-0" />}
+                      <span className="truncate">{themeObj.label}</span>
+                    </div>
+
+                    {/* Pill-Shaped Swatch Preview on the right of the same line */}
+                    <div className="flex items-center space-x-0.5 bg-zinc-100 border border-zinc-200 rounded-full px-1.5 py-0.5 shrink-0 shadow-2xs ml-2">
+                      {themeObj.colors.map((c, idx) => (
+                        <span
+                          key={idx}
+                          className="w-2 h-2 rounded-full border border-black/10"
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
+        {/* Grid & Background Select */}
         <div>
           <div className="flex items-center space-x-1 mb-1">
-            <label className="block text-xs font-mono font-medium text-zinc-600">Theme</label>
+            <label className="block text-xs font-mono font-medium text-zinc-600">Grid & Background</label>
 
-            {/* Small Info Icon (w-3 h-3) */}
+            {/* Small Info Icon */}
             <div className="relative group inline-flex items-center cursor-pointer">
               <Info className="w-3 h-3 text-zinc-400 group-hover:text-[#E27C52] transition-colors" />
 
-              {/* High-Key Light Mode White Hover Tooltip Box (Wider w-[350px] so all items fit on 1 line) */}
+              {/* Hover Tooltip */}
               <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block w-[350px] p-3 bg-white text-zinc-800 rounded-lg text-[11px] font-mono leading-relaxed shadow-xl border border-zinc-200 z-30 pointer-events-none">
                 <span className="text-[#E27C52] font-bold block border-b border-zinc-200 pb-1 mb-1.5">
-                  Seaborn Style Themes:
+                  Grid & Background Options:
                 </span>
                 <ul className="space-y-1 text-zinc-600">
                   <li className="whitespace-nowrap"><strong className="text-zinc-900 font-bold">Light Grid:</strong> Soft grey gridlines on light warm canvas</li>
@@ -200,8 +281,8 @@ export default function ChartControls({
           </div>
 
           <select
-            value={spec.style_theme}
-            onChange={(e) => handleChange("style_theme", e.target.value as StyleTheme)}
+            value={spec.grid_style}
+            onChange={(e) => handleChange("grid_style", e.target.value as GridStyle)}
             className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
           >
             <option value="whitegrid">Light Grid</option>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { getHealthDetails } from "@/lib/api-client";
 import DocsModal from "@/components/DocsModal";
 import ModelSelector from "@/components/ModelSelector";
@@ -33,12 +33,10 @@ export default function Header({ selectedModel, onModelChange }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           {/* Brand & Dynamic Custom Model Selector */}
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-lg bg-[#E27C52]/10 border border-[#E27C52]/20 flex items-center justify-center">
-              <BarChart3 className="h-4.5 w-4.5 text-[#E27C52]" />
-            </div>
+            <img src="/logo.svg" alt="QuickPlot Studio Logo" className="h-9 w-9 shrink-0" />
             <div className="flex items-center space-x-2.5">
               <span className="font-bold text-base tracking-tight text-zinc-900 font-mono">
-                AiCharter
+                QuickPlot Studio
               </span>
 
               {/* Custom Styled Model Selector Component */}
@@ -82,7 +80,7 @@ export default function Header({ selectedModel, onModelChange }: HeaderProps) {
 
             {/* 3. GitHub Button (Far Right) */}
             <a
-              href="https://github.com/joehu131/AiCharter"
+              href="https://github.com/joehu131/QuickPlotStudio"
               target="_blank"
               rel="noreferrer"
               className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 transition-colors text-xs font-mono font-semibold"

@@ -2,7 +2,7 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "AiCharter API"
+    PROJECT_NAME: str = "QuickPlot Studio API"
     VERSION: str = "1.0.0"
     API_PREFIX: str = "/api"
     GEMINI_API_KEY: str = ""

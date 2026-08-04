@@ -6,7 +6,7 @@ from app.api.router import api_router
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Backend API for AiCharter — AI-Powered Dataset Visualizer"
+    description="Backend API for QuickPlot Studio — AI-Powered Dataset Visualizer"
 )
 
 # Configure CORS for Next.js frontend integration

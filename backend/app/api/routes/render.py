@@ -11,6 +11,7 @@ class RenderRequest(BaseModel):
     dataset_id: str = Field(..., description="Unique dataset identifier obtained from /api/upload")
     spec: ChartSpec = Field(..., description="Chart specification defining plot parameters")
     format: Optional[str] = Field(default="png", description="Target image format (png or svg)")
+    dpi: Optional[int] = Field(default=300, description="DPI resolution for PNG export (150 or 300)")
 
 @router.post("/render")
 def render_chart(payload: RenderRequest):
@@ -27,8 +28,14 @@ def render_chart(payload: RenderRequest):
 
     try:
         format_lower = payload.format.lower() if payload.format else "png"
-        image_bytes = plot_service.render_chart(df, reconciled_spec, format=format_lower)
-        media_type = "image/svg+xml" if format_lower == "svg" else "image/png"
+        target_dpi = payload.dpi if payload.dpi else 300
+        image_bytes = plot_service.render_chart(df, reconciled_spec, format=format_lower, dpi=target_dpi)
+        if format_lower in ["jpg", "jpeg"]:
+            media_type = "image/jpeg"
+        elif format_lower == "svg":
+            media_type = "image/svg+xml"
+        else:
+            media_type = "image/png"
 
         return Response(
             content=image_bytes,

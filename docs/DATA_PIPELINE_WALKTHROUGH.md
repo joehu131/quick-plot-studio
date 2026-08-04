@@ -1,6 +1,6 @@
-# AiCharter — Data Pipeline & Transformation Walkthrough
+# QuickPlot Studio — Data Pipeline & Transformation Walkthrough
 
-This document provides a step-by-step educational walkthrough of how a dataset travels through **AiCharter**—from raw CSV text input all the way to a live rendered 300 DPI chart image stream.
+This document provides a step-by-step educational walkthrough of how a dataset travels through **QuickPlot Studio**—from raw CSV text input all the way to a live rendered 300 DPI chart image stream.
 
 We use the **Quarterly Tech Sales** dataset as our baseline reference implementation.
 
@@ -65,8 +65,8 @@ Instead of asking AI for unverified Python code, FastAPI passes the `ChartSpec` 
   "aggregation": "sum",
   "x_label": "Product Category",
   "y_label": "Total Revenue ($)",
-  "palette": "burnt_orange",
-  "style_theme": "whitegrid",
+  "theme": "burnt_orange",
+  "grid_style": "whitegrid",
   "fig_width": 10.0,
   "fig_height": 6.0,
   "show_grid": true,
@@ -101,7 +101,7 @@ The React frontend receives the recommended `ChartSpec` and populates the form c
 - **Y-Axis**: `Revenue`
 - **Group (Hue)**: `Region`
 - **Aggregation**: `Sum`
-- **Palette**: `Burnt Orange`
+- **Theme**: `Burnt Orange`
 
 Whenever a user tweaks any dropdown (e.g., changing theme from `Light Grid` to `Dark Grid` or adjusting dimensions), React sends only the lightweight JSON spec to `POST /api/render`. **No AI model is called during form edits**, keeping responses under 50ms!
 

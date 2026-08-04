@@ -14,8 +14,7 @@ export type AggregationType =
   | 'count' 
   | 'median';
 
-export type ColorPalette = 
-  | 'burnt_orange'
+export type Theme = 
   | 'Oranges'
   | 'viridis' 
   | 'magma' 
@@ -26,7 +25,7 @@ export type ColorPalette =
   | 'crest' 
   | 'flare';
 
-export type StyleTheme = 
+export type GridStyle = 
   | 'whitegrid' 
   | 'ticks' 
   | 'white' 
@@ -42,8 +41,8 @@ export interface ChartSpec {
   aggregation: AggregationType;
   x_label: string;
   y_label: string;
-  palette: ColorPalette;
-  style_theme: StyleTheme;
+  theme: Theme;
+  grid_style: GridStyle;
   fig_width: number;
   fig_height: number;
   show_grid: boolean;

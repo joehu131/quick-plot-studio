@@ -3,6 +3,7 @@ import uuid
 import time
 from typing import Dict, Tuple, Optional
 import pandas as pd
+from app.config import settings
 from app.models.chart_spec import DatasetSummary, ChartSpec
 
 class DataService:
@@ -23,6 +24,8 @@ class DataService:
         df = self._auto_convert_datetimes(df)
         
         self._cache[dataset_id] = (df, time.time())
+        if settings.DEBUG:
+            print(f"[AI Pipeline] DATA UPLOAD: Stored dataset '{dataset_id[:8]}...' ({len(df)} rows x {len(df.columns)} cols).", flush=True)
         return dataset_id
 
     def get_dataset(self, dataset_id: str) -> Optional[pd.DataFrame]:

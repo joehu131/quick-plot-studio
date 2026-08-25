@@ -143,14 +143,6 @@ Open `http://localhost:3000`.
 
 ---
 
-## Docker
-
-```bash
-docker-compose up --build
-```
-
----
-
 ## License
 
 MIT — Joel Hultman 2026

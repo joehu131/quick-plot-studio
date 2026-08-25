@@ -33,7 +33,6 @@ A dataset visualizer that turns table data such as CSV files into good looking c
 - **Matplotlib rendering** — Charts render server-side with Matplotlib.
 - **Export** — Download as 300 DPI PNG, vector SVG, or the raw JSON chart spec.
 - **8 built-in dataset presets** — SaaS Churn & LTV, Tech Stock Volatility, Customer Segmentation, ML Model Benchmarks, Quarterly Tech Sales, Iris Flower Metrics, Global Temperatures, AI Salaries.
-- 
 ---
 
 ## Architecture

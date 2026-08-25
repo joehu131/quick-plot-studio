@@ -1,8 +1,8 @@
-# QuickPlot Studio
+# QuickPlot Studio (WIP)
 
-A dataset visualizer that turns CSV files into statistical charts using AI-driven chart specification and server-side rendering with Seaborn/Matplotlib.
+A dataset visualizer that turns table data such as CSV files into good looking charts using AI-driven chart specification and server-side rendering with Seaborn/Matplotlib. The purpose of this project is to enable prettier charts faster
 
-Upload a CSV (or pick a preset), let Gemini suggest a chart spec, tweak it in real time, and export the result as a high-res PNG, SVG, or raw JSON spec.
+--> Upload a CSV (or pick a preset), let Gemini suggest a chart spec, tweak it in real time, and export the result as a high-res PNG, SVG, or raw JSON spec.
 
 <table>
   <tr>
@@ -27,16 +27,13 @@ Upload a CSV (or pick a preset), let Gemini suggest a chart spec, tweak it in re
 
 ## Features
 
-- **Multi-model support** — Switch between Gemini 3.5 Flash Lite, Gemini 3.6 Flash, Gemma-4-26b, or a rule-based fallback (no AI).
-- **Automatic rate-limit fallback** — If Gemini returns a 429, the backend retries with Gemma-4 before falling back to deterministic rules.
+- **Multi-model support** — Switch between the Free Gemini models: 3.5 Flash Lite, Gemini 3.6 Flash, Gemma-4-26b, or a rule-based fallback (no AI).
 - **Structured AI output** — Gemini returns a typed `ChartSpec` JSON validated by Pydantic. No AI-generated code is executed.
-- **Live spec editing** — Form controls populate with the AI recommendation. Adjust titles, themes, grid/background styles, aggregations, and axes without re-calling the LLM (debounced re-renders, sub-50ms).
-- **300 DPI rendering** — Charts render server-side in a Matplotlib BytesIO buffer at 300 DPI with click-to-zoom fullscreen view.
-- **Session-based uploads** — `POST /api/upload` returns a `dataset_id`. Subsequent render calls send only the ID + spec, avoiding redundant data transfer.
+- **Live spec editing** — Form fields are populated with the AI recommendation but you can adjust titles, themes, grid/background styles, aggregations, and axes without re-calling the LLM.
+- **Matplotlib rendering** — Charts render server-side with Matplotlib.
 - **Export** — Download as 300 DPI PNG, vector SVG, or the raw JSON chart spec.
 - **8 built-in dataset presets** — SaaS Churn & LTV, Tech Stock Volatility, Customer Segmentation, ML Model Benchmarks, Quarterly Tech Sales, Iris Flower Metrics, Global Temperatures, AI Salaries.
-- **Architecture docs** — Built-in flowchart modal and pipeline walkthrough ([`docs/DATA_PIPELINE_WALKTHROUGH.md`](docs/DATA_PIPELINE_WALKTHROUGH.md)).
-
+- 
 ---
 
 ## Architecture

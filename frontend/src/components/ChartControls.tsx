@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { SlidersHorizontal, Palette, Layout, Type, Layers, Info, ChevronDown, Check } from "lucide-react";
-import { ChartSpec, ChartType, AggregationType, Theme, GridStyle } from "@/types/chart";
+import { SlidersHorizontal, Palette, Layout, Type, Layers, Info, ChevronDown, Check, Sparkles } from "lucide-react";
+import { ChartSpec, ChartType, AggregationType, Theme, GridStyle, SortOrder, Orientation, LegendPosition } from "@/types/chart";
 
 interface ChartControlsProps {
   spec: ChartSpec;
@@ -61,49 +61,50 @@ export default function ChartControls({
   const currentThemeObj = THEME_OPTIONS.find((t) => t.id === spec.theme) || THEME_OPTIONS[0];
 
   return (
-    <div className="bg-[#F8F9FA] border border-zinc-200 rounded-lg p-4 shadow-sm space-y-4 font-sans">
+    <div className="bg-surface border border-surface-border rounded-xl p-4 shadow-2xs space-y-4 font-body">
       {/* Header & AI Re-analyze button */}
-      <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+      <div className="flex items-center justify-between border-b border-surface-border pb-3">
         <div className="flex items-center space-x-2">
-          <SlidersHorizontal className="w-4 h-4 text-[#E27C52]" />
-          <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider font-mono">
+          <SlidersHorizontal className="w-4 h-4 text-primary" />
+          <h2 className="text-xs font-bold text-text-main uppercase tracking-wider font-heading">
             2. Real-Time Spec Controls
           </h2>
         </div>
         <button
           onClick={onReAnalyze}
           disabled={isAnalyzing}
-          className="text-[11px] font-mono font-bold px-2.5 py-1 rounded bg-white hover:bg-[#E27C52]/5 text-[#E27C52] border border-[#E27C52]/30 transition-colors flex items-center space-x-1 cursor-pointer"
+          className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white hover:bg-primary-light text-primary border border-primary-border transition-colors flex items-center space-x-1 cursor-pointer shadow-2xs"
         >
+          <Sparkles className="w-3 h-3" />
           <span>Re-Analyze AI</span>
         </button>
       </div>
 
       {/* Chart Title */}
       <div>
-        <label className="block text-xs font-mono font-medium text-zinc-600 mb-1 flex items-center space-x-1">
-          <Type className="w-3 h-3 text-[#E27C52]" />
+        <label className="block text-xs font-medium text-text-muted mb-1 flex items-center space-x-1">
+          <Type className="w-3 h-3 text-primary" />
           <span>Chart Title</span>
         </label>
         <input
           type="text"
           value={spec.title}
           onChange={(e) => handleChange("title", e.target.value)}
-          className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-semibold"
+          className="w-full bg-white border border-surface-border rounded-lg px-3 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-semibold transition-colors"
         />
       </div>
 
       {/* Grid Row 1: Chart Type & Aggregation */}
       <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <label className="block text-xs font-mono font-medium text-zinc-600 mb-1 flex items-center space-x-1">
-            <Layout className="w-3 h-3 text-[#E27C52]" />
+          <label className="block text-xs font-medium text-text-muted mb-1 flex items-center space-x-1">
+            <Layout className="w-3 h-3 text-primary" />
             <span>Chart Type</span>
           </label>
           <select
             value={spec.chart_type}
             onChange={(e) => handleChange("chart_type", e.target.value as ChartType)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
           >
             <option value="bar">Bar Chart</option>
             <option value="line">Line Plot</option>
@@ -116,14 +117,14 @@ export default function ChartControls({
         </div>
 
         <div>
-          <label className="block text-xs font-mono font-medium text-zinc-600 mb-1 flex items-center space-x-1">
-            <Layers className="w-3 h-3 text-[#E27C52]" />
+          <label className="block text-xs font-medium text-text-muted mb-1 flex items-center space-x-1">
+            <Layers className="w-3 h-3 text-primary" />
             <span>Aggregation</span>
           </label>
           <select
             value={spec.aggregation}
             onChange={(e) => handleChange("aggregation", e.target.value as AggregationType)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
           >
             <option value="none">None (Raw)</option>
             <option value="sum">Sum</option>
@@ -137,11 +138,11 @@ export default function ChartControls({
       {/* Grid Row 2: X Column & Y Column */}
       <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <label className="block text-xs font-mono font-medium text-zinc-600 mb-1">X-Axis Column</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">X-Axis Column</label>
           <select
             value={spec.x_column}
             onChange={(e) => handleChange("x_column", e.target.value)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer font-body font-medium"
           >
             {columns.map((col) => (
               <option key={col} value={col}>
@@ -152,11 +153,11 @@ export default function ChartControls({
         </div>
 
         <div>
-          <label className="block text-xs font-mono font-medium text-zinc-600 mb-1">Y-Axis Column</label>
+          <label className="block text-xs font-medium text-text-muted mb-1">Y-Axis Column</label>
           <select
             value={spec.y_column || ""}
             onChange={(e) => handleChange("y_column", e.target.value || null)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer font-body font-medium"
           >
             <option value="">(None)</option>
             {columns.map((col) => (
@@ -170,11 +171,11 @@ export default function ChartControls({
 
       {/* Hue Column */}
       <div>
-        <label className="block text-xs font-mono font-medium text-zinc-600 mb-1">Hue / Group Column</label>
+        <label className="block text-xs font-medium text-text-muted mb-1">Hue / Group Column</label>
         <select
           value={spec.hue_column || ""}
           onChange={(e) => handleChange("hue_column", e.target.value || null)}
-          className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+          className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer font-body font-medium"
         >
           <option value="">(None)</option>
           {columns.map((col) => (
@@ -190,21 +191,20 @@ export default function ChartControls({
         
         {/* Custom Theme Selector with Pill Color Swatches */}
         <div className="relative" ref={themeDropdownRef}>
-          <label className="block text-xs font-mono font-medium text-zinc-600 mb-1 flex items-center space-x-1">
-            <Palette className="w-3 h-3 text-[#E27C52]" />
-            <span>Theme</span>
+          <label className="block text-xs font-medium text-text-muted mb-1 flex items-center space-x-1">
+            <Palette className="w-3 h-3 text-primary" />
+            <span>Plot Theme</span>
           </label>
           
           <button
             type="button"
             onClick={() => setIsThemeOpen(!isThemeOpen)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono flex items-center justify-between transition-colors cursor-pointer shadow-2xs"
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary flex items-center justify-between transition-colors cursor-pointer shadow-2xs"
           >
-            <span className="truncate">{currentThemeObj.label}</span>
+            <span className="truncate font-medium">{currentThemeObj.label}</span>
 
             <div className="flex items-center space-x-1.5 ml-2">
-              {/* Elegant Pill Preview */}
-              <div className="flex items-center space-x-0.5 bg-zinc-100 border border-zinc-200 rounded-full px-1.5 py-0.5 shadow-2xs">
+              <div className="flex items-center space-x-0.5 bg-surface border border-surface-border rounded-full px-1.5 py-0.5 shadow-2xs">
                 {currentThemeObj.colors.map((c, i) => (
                   <span
                     key={i}
@@ -213,13 +213,13 @@ export default function ChartControls({
                   />
                 ))}
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isThemeOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-text-muted transition-transform ${isThemeOpen ? "rotate-180" : ""}`} />
             </div>
           </button>
 
           {/* Theme Dropdown Popover */}
           {isThemeOpen && (
-            <div className="absolute left-0 top-full mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-xl z-40 py-1 font-mono text-xs overflow-hidden max-h-60 overflow-y-auto divide-y divide-zinc-100">
+            <div className="absolute left-0 top-full mt-1 w-full bg-white border border-surface-border rounded-lg shadow-xl z-40 py-1 text-xs overflow-hidden max-h-60 overflow-y-auto divide-y divide-surface-border">
               {THEME_OPTIONS.map((themeObj) => {
                 const isSelected = themeObj.id === spec.theme;
                 return (
@@ -229,17 +229,16 @@ export default function ChartControls({
                       handleChange("theme", themeObj.id);
                       setIsThemeOpen(false);
                     }}
-                    className={`px-2.5 py-2 flex items-center justify-between cursor-pointer transition-colors ${
-                      isSelected ? "bg-[#E27C52]/10 font-bold text-[#E27C52]" : "hover:bg-[#F8F9FA] text-zinc-800"
+                    className={`px-3 py-2 flex items-center justify-between cursor-pointer transition-colors ${
+                      isSelected ? "bg-primary-light font-bold text-primary" : "hover:bg-surface text-text-main"
                     }`}
                   >
-                    <div className="flex items-center space-x-1.5 truncate">
-                      {isSelected && <Check className="w-3 h-3 text-[#E27C52] shrink-0" />}
+                    <div className="flex items-center space-x-2 truncate">
+                      {isSelected && <Check className="w-3 h-3 text-primary shrink-0" />}
                       <span className="truncate">{themeObj.label}</span>
                     </div>
 
-                    {/* Pill-Shaped Swatch Preview on the right of the same line */}
-                    <div className="flex items-center space-x-0.5 bg-zinc-100 border border-zinc-200 rounded-full px-1.5 py-0.5 shrink-0 shadow-2xs ml-2">
+                    <div className="flex items-center space-x-0.5 bg-surface border border-surface-border rounded-full px-1.5 py-0.5 shrink-0 shadow-2xs ml-2">
                       {themeObj.colors.map((c, idx) => (
                         <span
                           key={idx}
@@ -258,23 +257,23 @@ export default function ChartControls({
         {/* Grid & Background Select */}
         <div>
           <div className="flex items-center space-x-1 mb-1">
-            <label className="block text-xs font-mono font-medium text-zinc-600">Grid & Background</label>
+            <label className="block text-xs font-medium text-text-muted">Grid & Background</label>
 
             {/* Small Info Icon */}
             <div className="relative group inline-flex items-center cursor-pointer">
-              <Info className="w-3 h-3 text-zinc-400 group-hover:text-[#E27C52] transition-colors" />
+              <Info className="w-3 h-3 text-text-muted group-hover:text-primary transition-colors" />
 
               {/* Hover Tooltip */}
-              <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block w-[350px] p-3 bg-white text-zinc-800 rounded-lg text-[11px] font-mono leading-relaxed shadow-xl border border-zinc-200 z-30 pointer-events-none">
-                <span className="text-[#E27C52] font-bold block border-b border-zinc-200 pb-1 mb-1.5">
+              <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block w-[350px] p-3 bg-white text-text-main rounded-lg text-xs leading-relaxed shadow-xl border border-surface-border z-30 pointer-events-none">
+                <span className="text-primary font-bold block border-b border-surface-border pb-1 mb-1.5">
                   Grid & Background Options:
                 </span>
-                <ul className="space-y-1 text-zinc-600">
-                  <li className="whitespace-nowrap"><strong className="text-zinc-900 font-bold">Light Grid:</strong> Soft grey gridlines on light warm canvas</li>
-                  <li className="whitespace-nowrap"><strong className="text-zinc-900 font-bold">Ticks:</strong> Clean white background with tick marks</li>
-                  <li className="whitespace-nowrap"><strong className="text-zinc-900 font-bold">Pure White:</strong> Minimalist white background with no grid</li>
-                  <li className="whitespace-nowrap"><strong className="text-zinc-900 font-bold">Dark Grid:</strong> Dark slate canvas with subtle gridlines</li>
-                  <li className="whitespace-nowrap"><strong className="text-zinc-900 font-bold">Dark Canvas:</strong> Deep black background with white text</li>
+                <ul className="space-y-1 text-text-muted">
+                  <li className="whitespace-nowrap"><strong className="text-text-main font-bold">Light Grid:</strong> Soft grey gridlines on light canvas</li>
+                  <li className="whitespace-nowrap"><strong className="text-text-main font-bold">Ticks:</strong> Clean white background with tick marks</li>
+                  <li className="whitespace-nowrap"><strong className="text-text-main font-bold">Pure White:</strong> Minimalist white background with no grid</li>
+                  <li className="whitespace-nowrap"><strong className="text-text-main font-bold">Dark Grid:</strong> Dark slate canvas with subtle gridlines</li>
+                  <li className="whitespace-nowrap"><strong className="text-text-main font-bold">Dark Canvas:</strong> Deep black background with white text</li>
                 </ul>
               </div>
             </div>
@@ -283,7 +282,7 @@ export default function ChartControls({
           <select
             value={spec.grid_style}
             onChange={(e) => handleChange("grid_style", e.target.value as GridStyle)}
-            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-900 focus:outline-none focus:border-[#E27C52] font-mono"
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
           >
             <option value="whitegrid">Light Grid</option>
             <option value="ticks">Ticks</option>
@@ -294,22 +293,85 @@ export default function ChartControls({
         </div>
       </div>
 
+      {/* Grid Row 4: Sort, Top N, Orientation, Legend */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">Sort Order</label>
+          <select
+            value={spec.sort_order || "none"}
+            onChange={(e) => handleChange("sort_order", e.target.value as SortOrder)}
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
+          >
+            <option value="none">None</option>
+            <option value="ascending">Ascending</option>
+            <option value="descending">Descending</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">Orientation</label>
+          <select
+            value={spec.orientation || "vertical"}
+            onChange={(e) => handleChange("orientation", e.target.value as Orientation)}
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
+          >
+            <option value="vertical">Vertical</option>
+            <option value="horizontal">Horizontal</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">Top N Categories</label>
+          <select
+            value={spec.top_n ?? "all"}
+            onChange={(e) => handleChange("top_n", e.target.value === "all" ? null : parseInt(e.target.value))}
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
+          >
+            <option value="all">Show All</option>
+            {spec.top_n && ![5, 8, 10, 15, 20].includes(spec.top_n) && (
+              <option value={spec.top_n}>Top {spec.top_n}</option>
+            )}
+            <option value="5">Top 5</option>
+            <option value="8">Top 8</option>
+            <option value="10">Top 10</option>
+            <option value="15">Top 15</option>
+            <option value="20">Top 20</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-text-muted mb-1">Legend Position</label>
+          <select
+            value={spec.legend_position || "auto"}
+            onChange={(e) => handleChange("legend_position", e.target.value as LegendPosition)}
+            className="w-full bg-white border border-surface-border rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer"
+          >
+            <option value="auto">Auto</option>
+            <option value="right">Right</option>
+            <option value="bottom">Bottom</option>
+            <option value="none">Hidden</option>
+          </select>
+        </div>
+      </div>
+
       {/* Sliders: Width & Height */}
-      <div className="space-y-2.5 pt-2 border-t border-zinc-200">
+      <div className="space-y-2.5 pt-2 border-t border-surface-border">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-mono font-medium text-zinc-600">Dimensions</label>
-          <label className="flex items-center space-x-1.5 text-[11px] font-mono text-zinc-700 cursor-pointer font-medium">
+          <label className="text-xs font-medium text-text-muted">Dimensions</label>
+          <label className="flex items-center space-x-1.5 text-xs text-text-main cursor-pointer font-medium">
             <input
               type="checkbox"
               checked={spec.show_grid}
               onChange={(e) => handleChange("show_grid", e.target.checked)}
-              className="rounded border-zinc-300 text-[#E27C52] focus:ring-0 cursor-pointer"
+              className="rounded border-surface-border accent-primary focus:ring-0 cursor-pointer"
             />
             <span>Show Gridlines</span>
           </label>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 text-[11px] font-mono text-zinc-600">
+        <div className="grid grid-cols-2 gap-2.5 text-xs text-text-muted font-body font-medium">
           <div>
             <span>Width: {spec.fig_width} in</span>
             <input
@@ -319,7 +381,7 @@ export default function ChartControls({
               step={0.5}
               value={spec.fig_width}
               onChange={(e) => handleChange("fig_width", parseFloat(e.target.value))}
-              className="w-full accent-[#E27C52] mt-1 cursor-pointer"
+              className="w-full accent-primary mt-1 cursor-pointer"
             />
           </div>
           <div>
@@ -331,7 +393,7 @@ export default function ChartControls({
               step={0.5}
               value={spec.fig_height}
               onChange={(e) => handleChange("fig_height", parseFloat(e.target.value))}
-              className="w-full accent-[#E27C52] mt-1 cursor-pointer"
+              className="w-full accent-primary mt-1 cursor-pointer"
             />
           </div>
         </div>

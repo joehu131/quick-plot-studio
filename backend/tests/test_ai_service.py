@@ -1,7 +1,13 @@
 import pytest
 from app.services.ai_service import ai_service
 from app.services.data_service import data_service
-from app.models.chart_spec import ChartSpec
+from app.models.chart_spec import (
+    ChartSpec,
+    ChartType,
+    SortOrder,
+    Orientation,
+    LegendPosition,
+)
 
 def test_heuristic_fallback(sample_df):
     dataset_id = data_service.store_dataset(sample_df)
@@ -81,4 +87,34 @@ def test_timeout_triggers_gemma_fallback(sample_df, monkeypatch):
     assert calls == ["gemini-3.5-flash-lite", "gemma-4-26b-a4b-it"]
     assert "504 GATEWAY TIMEOUT" in spec.reasoning
     assert "Gemma 4 selected bar chart" in spec.reasoning
+
+def test_build_prompt_includes_column_profiles_and_aesthetic_rules(sample_df):
+    dataset_id = data_service.store_dataset(sample_df)
+    summary = data_service.generate_summary(dataset_id, sample_df)
+    prompt = ai_service._build_prompt(summary)
+
+    # Statistical profiles table present
+    assert "### Column Statistical Profiles:" in prompt
+    assert "| Column | Type | Unique | Nulls | Statistical Details |" in prompt
+    assert "sales" in prompt
+    assert "min=" in prompt
+    assert "max=" in prompt
+
+    # Aesthetic rules present
+    assert "### Aesthetic Rules" in prompt
+    assert "sort_order to 'descending'" in prompt
+    assert "top_n to 8-10" in prompt
+
+def test_heuristic_fallback_bar_chart_defaults(sample_df):
+    # Dataset without datetime column produces bar chart
+    df_no_date = sample_df[["category", "sales", "profit"]].copy()
+    dataset_id = data_service.store_dataset(df_no_date)
+    summary = data_service.generate_summary(dataset_id, df_no_date)
+
+    fallback = ai_service._heuristic_fallback(summary, "Test Fallback")
+    assert fallback.chart_type == ChartType.BAR
+    assert fallback.sort_order == SortOrder.DESCENDING
+    assert fallback.orientation == Orientation.VERTICAL
+    assert fallback.legend_position == LegendPosition.NONE
+
 

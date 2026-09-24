@@ -32,6 +32,10 @@ export type GridStyle =
   | 'darkgrid' 
   | 'dark';
 
+export type SortOrder = 'none' | 'ascending' | 'descending';
+export type Orientation = 'vertical' | 'horizontal';
+export type LegendPosition = 'auto' | 'right' | 'bottom' | 'none';
+
 export interface ChartSpec {
   chart_type: ChartType;
   title: string;
@@ -43,10 +47,28 @@ export interface ChartSpec {
   y_label: string;
   theme: Theme;
   grid_style: GridStyle;
+  sort_order?: SortOrder;
+  top_n?: number | null;
+  orientation?: Orientation;
+  legend_position?: LegendPosition;
   fig_width: number;
   fig_height: number;
   show_grid: boolean;
   reasoning: string;
+}
+
+export interface ColumnProfile {
+  name: string;
+  dtype: string;
+  null_count: number;
+  unique_count: number;
+  min_val?: number | null;
+  max_val?: number | null;
+  mean_val?: number | null;
+  std_val?: number | null;
+  top_values?: string[] | null;
+  min_date?: string | null;
+  max_date?: string | null;
 }
 
 export interface DatasetSummary {
@@ -56,4 +78,5 @@ export interface DatasetSummary {
   columns: string[];
   column_types: Record<string, string>;
   sample_rows: Record<string, unknown>[];
+  column_profiles?: ColumnProfile[];
 }

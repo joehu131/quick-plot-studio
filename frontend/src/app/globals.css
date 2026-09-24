@@ -1,17 +1,57 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-border: var(--primary-border);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-surface-border: var(--surface-border);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+
+  --font-heading: var(--font-heading-family);
+  --font-body: var(--font-body-family);
+  --font-code: var(--font-code-family);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #27272a;
+  /* Default Standard: Obsidian Slate & Clean Swiss */
+  --primary: #18181B;
+  --primary-hover: #27272A;
+  --primary-light: rgba(24, 24, 27, 0.06);
+  --primary-border: rgba(24, 24, 27, 0.20);
+  --primary-foreground: #FFFFFF;
+  --surface: #FAFAFA;
+  --surface-card: #FFFFFF;
+  --surface-border: #E4E4E7;
+  --text-main: #09090B;
+  --text-muted: #71717A;
+  --ring: #18181B;
+
+  --font-heading-family: var(--font-ibm-plex-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body-family: var(--font-ibm-plex-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-code-family: var(--font-ibm-plex-mono), "SFMono-Regular", Consolas, Menlo, monospace;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: var(--text-main);
+  background-color: #FFFFFF;
+  font-family: var(--font-body-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background-color: #E27C52;
-  color: #ffffff;
+  background-color: var(--primary);
+  color: #FFFFFF;
 }

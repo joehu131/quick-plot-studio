@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Download, FileCode, Image as ImageIcon, ChevronDown } from "lucide-react";
-import { ChartSpec } from "@/types/chart";
+import { ChartSpec, DatasetSummary } from "@/types/chart";
 import { fetchRenderBlob } from "@/lib/api-client";
 import JsonSpecModal from "@/components/JsonSpecModal";
 
@@ -49,18 +49,18 @@ export default function ExportToolbar({ datasetId, spec, summary }: ExportToolba
   };
 
   return (
-    <div className="bg-[#F8F9FA] border border-zinc-200 rounded-lg p-3 shadow-sm flex flex-wrap items-center justify-between gap-2.5 font-mono">
-      <div className="flex items-center space-x-1.5">
-        <Download className="w-3.5 h-3.5 text-[#E27C52]" />
-        <span className="text-xs font-bold text-zinc-800">Export Options:</span>
+    <div className="bg-surface border border-surface-border rounded-xl p-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-2.5 font-body">
+      <div className="flex items-center space-x-2">
+        <Download className="w-4 h-4 text-primary" />
+        <span className="text-xs font-bold text-text-main font-heading">Export Options:</span>
       </div>
 
       <div className="flex items-center space-x-2">
-        {/* Orange Download Dropdown (Opens Upward) */}
+        {/* Primary Download Dropdown (Opens Upward) */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="px-3.5 py-1.5 rounded-lg bg-[#E27C52] hover:bg-[#D46B41] text-white text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Download</span>
@@ -68,63 +68,63 @@ export default function ExportToolbar({ datasetId, spec, summary }: ExportToolba
           </button>
 
           {isOpen && (
-            <div className="absolute right-0 bottom-full mb-1 w-52 bg-white border border-zinc-200 rounded-lg shadow-xl z-50 py-1 text-xs font-mono text-zinc-800 divide-y divide-zinc-100">
+            <div className="absolute right-0 bottom-full mb-1 w-52 bg-white border border-surface-border rounded-lg shadow-xl z-50 py-1 text-xs text-text-main divide-y divide-surface-border">
               <div className="py-1">
                 <button
                   onClick={() => handleDownload("png", 150)}
-                  className="w-full text-left px-3 py-1.5 hover:bg-[#E27C52]/5 hover:text-[#E27C52] flex items-center justify-between cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-1.5 hover:bg-surface hover:text-primary flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
+                    <ImageIcon className="w-3.5 h-3.5 text-text-muted" />
                     <span>PNG Image</span>
                   </span>
-                  <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded font-bold">150 DPI</span>
+                  <span className="text-[10px] text-text-muted bg-surface px-1.5 py-0.5 rounded font-bold font-body">150 DPI</span>
                 </button>
                 <button
                   onClick={() => handleDownload("png", 300)}
-                  className="w-full text-left px-3 py-1.5 hover:bg-[#E27C52]/5 hover:text-[#E27C52] flex items-center justify-between cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-1.5 hover:bg-primary-light hover:text-primary flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-[#E27C52]" />
-                    <span className="font-semibold">PNG Image</span>
+                    <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-semibold text-primary">PNG Image</span>
                   </span>
-                  <span className="text-[10px] text-[#E27C52] bg-[#E27C52]/10 px-1.5 py-0.5 rounded font-bold">300 DPI</span>
+                  <span className="text-[10px] text-primary bg-primary-light px-1.5 py-0.5 rounded font-bold font-body">300 DPI</span>
                 </button>
               </div>
 
               <div className="py-1">
                 <button
                   onClick={() => handleDownload("jpg", 150)}
-                  className="w-full text-left px-3 py-1.5 hover:bg-[#E27C52]/5 hover:text-[#E27C52] flex items-center justify-between cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-1.5 hover:bg-surface hover:text-primary flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-zinc-400" />
+                    <ImageIcon className="w-3.5 h-3.5 text-text-muted" />
                     <span>JPG Image</span>
                   </span>
-                  <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded font-bold">150 DPI</span>
+                  <span className="text-[10px] text-text-muted bg-surface px-1.5 py-0.5 rounded font-bold font-body">150 DPI</span>
                 </button>
                 <button
                   onClick={() => handleDownload("jpg", 300)}
-                  className="w-full text-left px-3 py-1.5 hover:bg-[#E27C52]/5 hover:text-[#E27C52] flex items-center justify-between cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-1.5 hover:bg-primary-light hover:text-primary flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-[#E27C52]" />
-                    <span className="font-semibold">JPG Image</span>
+                    <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-semibold text-primary">JPG Image</span>
                   </span>
-                  <span className="text-[10px] text-[#E27C52] bg-[#E27C52]/10 px-1.5 py-0.5 rounded font-bold">300 DPI</span>
+                  <span className="text-[10px] text-primary bg-primary-light px-1.5 py-0.5 rounded font-bold font-body">300 DPI</span>
                 </button>
               </div>
 
               <div className="py-1">
                 <button
                   onClick={() => handleDownload("svg")}
-                  className="w-full text-left px-3 py-1.5 hover:bg-[#E27C52]/5 hover:text-[#E27C52] flex items-center justify-between cursor-pointer transition-colors"
+                  className="w-full text-left px-3 py-1.5 hover:bg-primary-light hover:text-primary flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <Download className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="font-semibold text-emerald-700">SVG Vector</span>
+                    <Download className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-semibold text-primary">SVG Vector</span>
                   </span>
-                  <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">Vector</span>
+                  <span className="text-[10px] text-primary bg-primary-light px-1.5 py-0.5 rounded font-bold font-body">Vector</span>
                 </button>
               </div>
             </div>
@@ -134,9 +134,9 @@ export default function ExportToolbar({ datasetId, spec, summary }: ExportToolba
         {/* Code & Spec Button -> Opens JsonSpecModal */}
         <button
           onClick={() => setIsJsonModalOpen(true)}
-          className="px-3 py-1.5 rounded-lg bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200 text-xs font-semibold flex items-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
+          className="px-3 py-1.5 rounded-lg bg-white hover:bg-surface text-text-main border border-surface-border text-xs font-semibold flex items-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
         >
-          <FileCode className="w-3.5 h-3.5 text-[#E27C52]" />
+          <FileCode className="w-3.5 h-3.5 text-primary" />
           <span>Code & Spec</span>
         </button>
       </div>

@@ -84,3 +84,30 @@ def test_render_endpoint(client, sample_sales_csv_text):
     assert render_res.status_code == 200
     assert render_res.headers["content-type"] == "image/png"
     assert render_res.content[:4] == b'\x89PNG'
+
+def test_render_endpoint_dpi_validation(client, sample_sales_csv_text):
+    upload_res = client.post("/api/upload/text", json={"csv_text": sample_sales_csv_text})
+    dataset_id = upload_res.json()["dataset_id"]
+
+    # Reject DPI > 600
+    res_high = client.post("/api/render", json={
+        "dataset_id": dataset_id,
+        "spec": {
+            "chart_type": "bar", "title": "T", "x_column": "category", "y_column": "revenue",
+            "x_label": "X", "y_label": "Y"
+        },
+        "dpi": 50000
+    })
+    assert res_high.status_code == 422
+
+    # Reject DPI < 72
+    res_low = client.post("/api/render", json={
+        "dataset_id": dataset_id,
+        "spec": {
+            "chart_type": "bar", "title": "T", "x_column": "category", "y_column": "revenue",
+            "x_label": "X", "y_label": "Y"
+        },
+        "dpi": 10
+    })
+    assert res_low.status_code == 422
+

@@ -36,6 +36,21 @@ class GridStyle(str, Enum):
     DARKGRID = "darkgrid"
     DARK = "dark"
 
+class SortOrder(str, Enum):
+    NONE = "none"
+    ASCENDING = "ascending"
+    DESCENDING = "descending"
+
+class Orientation(str, Enum):
+    VERTICAL = "vertical"
+    HORIZONTAL = "horizontal"
+
+class LegendPosition(str, Enum):
+    AUTO = "auto"
+    RIGHT = "right"
+    BOTTOM = "bottom"
+    NONE = "none"
+
 class ChartSpec(BaseModel):
     chart_type: ChartType = Field(
         ...,
@@ -77,6 +92,24 @@ class ChartSpec(BaseModel):
         default=GridStyle.WHITEGRID,
         description="Background style and gridlines layout."
     )
+    sort_order: SortOrder = Field(
+        default=SortOrder.NONE,
+        description="Sort order for bar and pie charts by value. 'descending' is recommended for bar charts."
+    )
+    top_n: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=50,
+        description="Limit chart to the top N categories by value. None shows all categories."
+    )
+    orientation: Orientation = Field(
+        default=Orientation.VERTICAL,
+        description="Bar and box chart orientation. Use 'horizontal' for long category names."
+    )
+    legend_position: LegendPosition = Field(
+        default=LegendPosition.AUTO,
+        description="Legend placement on the chart."
+    )
     fig_width: float = Field(
         default=10.0,
         ge=4.0,
@@ -98,6 +131,25 @@ class ChartSpec(BaseModel):
         description="AI explanation of why this chart representation was chosen."
     )
 
+
+class ColumnProfile(BaseModel):
+    """Per-column statistical profile sent to the AI for informed chart selection."""
+    name: str
+    dtype: str                                          # "numeric", "categorical/text", "datetime"
+    null_count: int = 0
+    unique_count: int = 0
+    # Numeric columns
+    min_val: Optional[float] = None
+    max_val: Optional[float] = None
+    mean_val: Optional[float] = None
+    std_val: Optional[float] = None
+    # Categorical columns
+    top_values: Optional[List[str]] = None              # Top 5 most frequent values
+    # Datetime columns
+    min_date: Optional[str] = None
+    max_date: Optional[str] = None
+
+
 class DatasetSummary(BaseModel):
     dataset_id: str
     row_count: int
@@ -105,3 +157,4 @@ class DatasetSummary(BaseModel):
     columns: List[str]
     column_types: Dict[str, str]
     sample_rows: List[Dict[str, Any]]
+    column_profiles: List[ColumnProfile] = []

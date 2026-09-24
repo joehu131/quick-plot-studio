@@ -8,12 +8,22 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.colors as mcolors
 
-from app.models.chart_spec import ChartSpec, ChartType, AggregationType, Theme, GridStyle
+from app.models.chart_spec import (
+    ChartSpec,
+    ChartType,
+    AggregationType,
+    Theme,
+    GridStyle,
+    SortOrder,
+    Orientation,
+    LegendPosition,
+)
 
 class PlotService:
     def render_chart(self, df: pd.DataFrame, spec: ChartSpec, format: str = "png", dpi: int = 300) -> bytes:
         """Renders a chart based on ChartSpec and DataFrame with dynamic grid style, reliable gridlines, and customizable DPI."""
         plot_df = self._prepare_data(df, spec)
+        plot_df = self._apply_sort_and_crop(plot_df, spec)
 
         # Resolve Theme Colors based on spec.grid_style
         is_dark_theme = spec.grid_style in [GridStyle.DARKGRID, GridStyle.DARK]
@@ -52,7 +62,30 @@ class PlotService:
         ax.set_facecolor(BG_COLOR)
         ax.set_axisbelow(True)
 
+        fmt_clean = format.lower().strip()
+        if fmt_clean in ["jpg", "jpeg"]:
+            file_format = "jpeg"
+        elif fmt_clean == "svg":
+            file_format = "svg"
+        else:
+            file_format = "png"
+
         try:
+            # Pre-flight guard for empty or unplottable DataFrame
+            if plot_df.empty or not spec.x_column or spec.x_column not in plot_df.columns:
+                ax.text(
+                    0.5, 0.5,
+                    "No data available to display",
+                    ha='center', va='center', transform=ax.transAxes,
+                    fontsize=11, color=TEXT_COLOR, fontweight='bold'
+                )
+                ax.axis('off')
+                fig.tight_layout()
+                buf = io.BytesIO()
+                fig.savefig(buf, format=file_format, dpi=dpi, bbox_inches='tight', facecolor=BG_COLOR)
+                buf.seek(0)
+                return buf.getvalue()
+
             group_col = spec.hue_column or spec.x_column
             n_cats = plot_df[group_col].nunique() if (group_col and group_col in plot_df.columns) else 1
 
@@ -60,10 +93,16 @@ class PlotService:
 
             if spec.chart_type == ChartType.BAR:
                 color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column, spec.x_column)
+                plot_x = spec.x_column
+                plot_y = spec.y_column
+                if spec.orientation == Orientation.HORIZONTAL and spec.y_column:
+                    plot_x, plot_y = plot_y, plot_x
+                if not spec.hue_column:
+                    color_kwargs["dodge"] = False
                 sns.barplot(
                     data=plot_df,
-                    x=spec.x_column,
-                    y=spec.y_column,
+                    x=plot_x,
+                    y=plot_y,
                     ax=ax,
                     **color_kwargs
                 )
@@ -90,34 +129,45 @@ class PlotService:
                 )
             elif spec.chart_type == ChartType.HISTOGRAM:
                 color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column)
+                clean_series = plot_df[spec.x_column].dropna() if spec.x_column in plot_df else pd.Series(dtype=float)
+                has_variance = clean_series.nunique() > 1 and len(clean_series) > 1
                 sns.histplot(
                     data=plot_df,
                     x=spec.x_column,
-                    kde=True,
+                    kde=has_variance,
                     ax=ax,
                     **color_kwargs
                 )
             elif spec.chart_type == ChartType.BOX:
                 color_kwargs = self._resolve_color_args(palette_colors, spec.hue_column, spec.x_column)
+                plot_x = spec.x_column
+                plot_y = spec.y_column
+                if spec.orientation == Orientation.HORIZONTAL and spec.y_column:
+                    plot_x, plot_y = plot_y, plot_x
                 sns.boxplot(
                     data=plot_df,
-                    x=spec.x_column,
-                    y=spec.y_column,
+                    x=plot_x,
+                    y=plot_y,
                     ax=ax,
                     **color_kwargs
                 )
             elif spec.chart_type == ChartType.PIE:
                 self._render_pie(plot_df, spec, ax, palette_colors, BG_COLOR, TEXT_COLOR)
             elif spec.chart_type == ChartType.HEATMAP:
-                self._render_heatmap(plot_df, spec, ax)
+                self._render_heatmap(plot_df, spec, ax, TEXT_COLOR)
             else:
                 sns.scatterplot(data=plot_df, x=spec.x_column, y=spec.y_column, ax=ax)
 
             # Titles, labels, and gridlines customization
             ax.set_title(spec.title, fontsize=14, fontweight="bold", pad=15, color=TEXT_COLOR)
-            ax.set_xlabel(spec.x_label, fontsize=11, fontweight="semibold", color=MUTED_TEXT)
-            if spec.chart_type != ChartType.PIE:
-                ax.set_ylabel(spec.y_label, fontsize=11, fontweight="semibold", color=MUTED_TEXT)
+            if spec.orientation == Orientation.HORIZONTAL and spec.chart_type in [ChartType.BAR, ChartType.BOX] and spec.y_column:
+                ax.set_xlabel(spec.y_label, fontsize=11, fontweight="semibold", color=MUTED_TEXT)
+                if spec.chart_type != ChartType.PIE:
+                    ax.set_ylabel(spec.x_label, fontsize=11, fontweight="semibold", color=MUTED_TEXT)
+            else:
+                ax.set_xlabel(spec.x_label, fontsize=11, fontweight="semibold", color=MUTED_TEXT)
+                if spec.chart_type != ChartType.PIE:
+                    ax.set_ylabel(spec.y_label, fontsize=11, fontweight="semibold", color=MUTED_TEXT)
 
             # Explicitly enforce show_grid state on axis
             if spec.chart_type != ChartType.PIE and spec.chart_type != ChartType.HEATMAP:
@@ -128,39 +178,54 @@ class PlotService:
             for spine in ax.spines.values():
                 spine.set_color(BORDER_COLOR)
 
-            # Rotate X ticks if there are many categorical labels
-            if spec.x_column in plot_df and plot_df[spec.x_column].nunique() > 6:
-                plt.xticks(rotation=45, ha='right')
+            # Rotate X ticks if there are many categorical labels using ax method
+            if spec.x_column in plot_df and plot_df[spec.x_column].nunique() > 6 and spec.orientation != Orientation.HORIZONTAL:
+                ax.tick_params(axis='x', rotation=45)
 
-            # Style legend if present
+            # Style and position legend if present
             legend = ax.get_legend()
             if legend:
-                legend.get_frame().set_facecolor(BG_COLOR)
-                legend.get_frame().set_edgecolor(BORDER_COLOR)
-                for text in legend.get_texts():
-                    text.set_color(TEXT_COLOR)
+                if spec.legend_position == LegendPosition.NONE:
+                    legend.remove()
+                else:
+                    legend.get_frame().set_facecolor(BG_COLOR)
+                    legend.get_frame().set_edgecolor(BORDER_COLOR)
+                    for text in legend.get_texts():
+                        text.set_color(TEXT_COLOR)
+                    if spec.legend_position == LegendPosition.BOTTOM:
+                        ax.legend(
+                            loc='upper center',
+                            bbox_to_anchor=(0.5, -0.15),
+                            ncol=min(n_cats, 4),
+                            facecolor=BG_COLOR,
+                            edgecolor=BORDER_COLOR
+                        )
+                        for text in ax.get_legend().get_texts():
+                            text.set_color(TEXT_COLOR)
+                    elif spec.legend_position == LegendPosition.RIGHT:
+                        ax.legend(
+                            loc='center left',
+                            bbox_to_anchor=(1.02, 0.5),
+                            facecolor=BG_COLOR,
+                            edgecolor=BORDER_COLOR
+                        )
+                        for text in ax.get_legend().get_texts():
+                            text.set_color(TEXT_COLOR)
 
-            plt.tight_layout()
+            fig.tight_layout()
 
             # Save to buffer at requested DPI
             buf = io.BytesIO()
-            fmt_clean = format.lower().strip()
-            if fmt_clean in ["jpg", "jpeg"]:
-                file_format = "jpeg"
-            elif fmt_clean == "svg":
-                file_format = "svg"
-            else:
-                file_format = "png"
             fig.savefig(buf, format=file_format, dpi=dpi, bbox_inches='tight', facecolor=BG_COLOR)
             buf.seek(0)
             return buf.getvalue()
 
         finally:
             plt.close(fig)
-            plt.close('all')
 
     def _get_palette_colors(self, theme: Theme, df: pd.DataFrame, spec: ChartSpec, n_cats: int = 1):
         """Resolves custom burnt orange or Seaborn color palettes, matched to category count."""
+        n_cats = max(1, n_cats)
         palette_list = list(sns.color_palette(theme.value, n_colors=max(n_cats, 6)))
         if n_cats == 1:
             if theme.value in ["Oranges", "crest", "flare"]:
@@ -182,10 +247,26 @@ class PlotService:
 
     def _prepare_data(self, df: pd.DataFrame, spec: ChartSpec) -> pd.DataFrame:
         """Applies grouping & aggregations if specified in ChartSpec."""
+        if df.empty or not spec.x_column or spec.x_column not in df.columns:
+            return df
+
+        # Special case: Bar chart with COUNT aggregation or missing y_column
+        if spec.chart_type == ChartType.BAR and (not spec.y_column or spec.aggregation == AggregationType.COUNT):
+            try:
+                group_cols = [spec.x_column]
+                if spec.hue_column and spec.hue_column in df.columns and spec.hue_column != spec.x_column:
+                    group_cols.append(spec.hue_column)
+                count_df = df.groupby(group_cols, as_index=False).size()
+                count_df.rename(columns={"size": "count"}, inplace=True)
+                spec.y_column = "count"
+                return count_df
+            except Exception:
+                return df
+
         if spec.aggregation == AggregationType.NONE or not spec.y_column:
             return df
 
-        if spec.x_column not in df.columns or spec.y_column not in df.columns:
+        if spec.y_column not in df.columns:
             return df
 
         agg_func = spec.aggregation.value
@@ -199,18 +280,66 @@ class PlotService:
         except Exception:
             return df
 
+    def _apply_sort_and_crop(self, df: pd.DataFrame, spec: ChartSpec) -> pd.DataFrame:
+        """Applies top_n category filtering and sort_order to the prepared DataFrame."""
+        if df.empty or spec.chart_type in [ChartType.SCATTER, ChartType.HEATMAP, ChartType.HISTOGRAM, ChartType.LINE]:
+            return df
+
+        if not spec.x_column or spec.x_column not in df.columns:
+            return df
+
+        # Apply top_n: keep only top N categories by y_column sum if numeric y_column exists, else frequency
+        if spec.top_n is not None and spec.top_n > 0:
+            if spec.y_column and spec.y_column in df.columns and pd.api.types.is_numeric_dtype(df[spec.y_column]):
+                top_cats = (
+                    df.groupby(spec.x_column)[spec.y_column]
+                    .sum()
+                    .abs()
+                    .nlargest(spec.top_n)
+                    .index
+                )
+            else:
+                top_cats = df[spec.x_column].value_counts().nlargest(spec.top_n).index
+            df = df[df[spec.x_column].isin(top_cats)]
+
+        # Apply sort_order
+        if spec.sort_order != SortOrder.NONE:
+            sort_target = spec.y_column if (spec.y_column and spec.y_column in df.columns) else spec.x_column
+            is_ascending = (spec.sort_order == SortOrder.ASCENDING)
+            df = df.sort_values(by=sort_target, ascending=is_ascending)
+
+        return df
+
     def _render_pie(self, df: pd.DataFrame, spec: ChartSpec, ax: plt.Axes, palette_colors, bg_color: str, text_color: str):
         """Helper to render a pie chart on light/dark canvas."""
         if spec.y_column and spec.y_column in df.columns:
-            data_series = df.groupby(spec.x_column)[spec.y_column].sum()
+            try:
+                numeric_y = pd.to_numeric(df[spec.y_column], errors='coerce').fillna(0)
+                temp_df = pd.DataFrame({spec.x_column: df[spec.x_column], spec.y_column: numeric_y})
+                data_series = temp_df.groupby(spec.x_column)[spec.y_column].sum()
+                data_series = data_series[data_series > 0]
+                if data_series.empty or data_series.sum() <= 0:
+                    data_series = df[spec.x_column].value_counts().head(8)
+            except Exception:
+                data_series = df[spec.x_column].value_counts().head(8)
         else:
             data_series = df[spec.x_column].value_counts().head(8)
+
+        if data_series.empty or (len(data_series) == 1 and data_series.iloc[0] <= 0):
+            ax.text(
+                0.5, 0.5,
+                "No positive data available for pie chart",
+                ha='center', va='center', transform=ax.transAxes,
+                fontsize=11, color=text_color, fontweight='bold'
+            )
+            ax.axis('off')
+            return
 
         n_wedges = len(data_series)
         if isinstance(palette_colors, list) and len(palette_colors) >= n_wedges:
             colors = palette_colors[:n_wedges]
         else:
-            colors = sns.color_palette(spec.theme.value, n_wedges)
+            colors = sns.color_palette(spec.theme.value, max(1, n_wedges))
 
         wedges, texts, autotexts = ax.pie(
             data_series,
@@ -226,7 +355,7 @@ class PlotService:
             at.set_color("#FFFFFF")
             at.set_weight('bold')
 
-    def _render_heatmap(self, df: pd.DataFrame, spec: ChartSpec, ax: plt.Axes):
+    def _render_heatmap(self, df: pd.DataFrame, spec: ChartSpec, ax: plt.Axes, text_color: str = "#1E293B"):
         """Helper to render a correlation or pivot heatmap."""
         numeric_df = df.select_dtypes(include=['number'])
         palette_name = spec.theme.value
@@ -244,8 +373,16 @@ class PlotService:
                 ax=ax,
                 cbar_kws={"drawedges": False}
             )
+        elif not numeric_df.empty and len(numeric_df.columns) == 1:
+            sns.heatmap(numeric_df.head(10), annot=True, cmap=cmap, ax=ax)
         else:
-            sns.heatmap(df.head(10).select_dtypes(include=['number']), annot=True, cmap=cmap, ax=ax)
+            ax.text(
+                0.5, 0.5,
+                "Heatmap requires numeric columns\n(No numeric columns found in dataset)",
+                ha='center', va='center', transform=ax.transAxes,
+                fontsize=11, color=text_color, fontweight='bold'
+            )
+            ax.axis('off')
 
 # Global singleton instance
 plot_service = PlotService()

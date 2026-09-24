@@ -13,10 +13,17 @@ from app.models.chart_spec import (
     AggregationType,
     Theme,
     GridStyle,
-    DatasetSummary
+    SortOrder,
+    Orientation,
+    LegendPosition,
+    DatasetSummary,
+    ColumnProfile
 )
 
 logger = logging.getLogger(__name__)
+
+# Module-level worker pool for API calls with timeouts (avoids shutdown(wait=True) blocking)
+_EXECUTOR = concurrent.futures.ThreadPoolExecutor(max_workers=16)
 
 class AIService:
     def __init__(self):
@@ -82,18 +89,18 @@ class AIService:
         start_time = time.time()
         self._log_pipeline(f"Dispatching call to '{model_name}' (dataset: {summary.row_count} rows x {summary.column_count} cols, max timeout: {timeout:.1f}s)...")
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(self._call_model, summary, model_name)
-            try:
-                result = future.result(timeout=timeout)
-                elapsed = time.time() - start_time
-                self._log_pipeline(f"SUCCESS: Model '{model_name}' completed in {elapsed:.2f}s")
-                logger.info(f"Model '{model_name}' completed successfully in {elapsed:.2f}s")
-                return result
-            except concurrent.futures.TimeoutError:
-                elapsed = time.time() - start_time
-                self._log_pipeline(f"TIMEOUT: Model '{model_name}' exceeded timeout limit ({elapsed:.2f}s > {timeout:.1f}s)")
-                raise TimeoutError(f"Model '{model_name}' timed out after {timeout:.1f}s (elapsed: {elapsed:.2f}s)")
+        future = _EXECUTOR.submit(self._call_model, summary, model_name)
+        try:
+            result = future.result(timeout=timeout)
+            elapsed = time.time() - start_time
+            self._log_pipeline(f"SUCCESS: Model '{model_name}' completed in {elapsed:.2f}s")
+            logger.info(f"Model '{model_name}' completed successfully in {elapsed:.2f}s")
+            return result
+        except concurrent.futures.TimeoutError:
+            future.cancel()
+            elapsed = time.time() - start_time
+            self._log_pipeline(f"TIMEOUT: Model '{model_name}' exceeded timeout limit ({elapsed:.2f}s > {timeout:.1f}s)")
+            raise TimeoutError(f"Model '{model_name}' timed out after {timeout:.1f}s (elapsed: {elapsed:.2f}s)")
 
     def _format_error_summary(self, err_str: str) -> str:
         """Extracts concise, user-friendly error category from API exception string."""
@@ -119,13 +126,15 @@ class AIService:
         client = self._get_client()
         prompt = self._build_prompt(summary)
 
+        timeout_ms = int(settings.AI_API_TIMEOUT_SECONDS * 1000)
         response = client.models.generate_content(
             model=model_name,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=ChartSpec,
-                temperature=0.2
+                temperature=0.2,
+                http_options=types.HttpOptions(timeout=timeout_ms)
             )
         )
 
@@ -140,16 +149,42 @@ class AIService:
         raise ValueError(f"Empty response received from model '{model_name}'.")
 
     def _build_prompt(self, summary: DatasetSummary) -> str:
-        return f"""
-You are an expert data visualization architect. Analyze the dataset summary below and recommend the optimal chart visualization using the required JSON schema.
+        # Build column statistical profile table
+        profile_lines = []
+        profile_lines.append("| Column | Type | Unique | Nulls | Statistical Details |")
+        profile_lines.append("|---|---|---|---|---|")
+        for p in summary.column_profiles:
+            details = "N/A"
+            if p.dtype == "numeric":
+                parts = []
+                if p.min_val is not None:
+                    parts.append(f"min={p.min_val}")
+                if p.max_val is not None:
+                    parts.append(f"max={p.max_val}")
+                if p.mean_val is not None:
+                    parts.append(f"mean={p.mean_val}")
+                if p.std_val is not None:
+                    parts.append(f"std={p.std_val}")
+                details = ", ".join(parts) if parts else "numeric"
+            elif p.dtype == "categorical/text" and p.top_values:
+                details = f"top values: {', '.join(p.top_values[:5])}"
+            elif p.dtype == "datetime":
+                if p.min_date and p.max_date:
+                    details = f"range: {p.min_date} to {p.max_date}"
+            profile_lines.append(f"| {p.name} | {p.dtype} | {p.unique_count} | {p.null_count} | {details} |")
+        profile_table = "\n".join(profile_lines) if summary.column_profiles else f"Columns: {summary.column_types}"
 
-### Dataset Profile:
+        return f"""You are an expert data visualization architect. Analyze the dataset summary below and recommend the optimal chart visualization using the required JSON schema.
+
+### Dataset Overview:
 - Total Rows: {summary.row_count}
 - Total Columns: {summary.column_count}
-- Available Columns & Inferred Types: {summary.column_types}
 
-### Data Preview (Top Rows):
-{json.dumps(summary.sample_rows, indent=2)}
+### Column Statistical Profiles:
+{profile_table}
+
+### Data Sample ({len(summary.sample_rows)} rows):
+{json.dumps(summary.sample_rows, indent=2, default=str)}
 
 ### Instructions:
 1. Choose the single best `chart_type` from: bar, line, scatter, histogram, box, pie, heatmap.
@@ -158,13 +193,27 @@ You are an expert data visualization architect. Analyze the dataset summary belo
    - Use 'scatter' for relationships between two numeric columns.
    - Use 'box' for distributions across categorical groups.
    - Use 'histogram' for a single numeric column distribution.
-   - Use 'pie' for proportions of a categorical variable (when categories <= 8).
+   - Use 'pie' for proportions of a categorical variable (strictly when categories <= 8).
    - Use 'heatmap' for correlation matrix across numeric columns.
 2. Select `x_column` and `y_column` strictly from available columns: {summary.columns}.
 3. Pick an appropriate `aggregation` if grouping is needed (none, sum, mean, count, median).
 4. Provide a professional `title`, `x_label`, `y_label`, and `theme` (Oranges, viridis, magma, coolwarm, deep, muted, pastel, crest, flare).
 5. Provide a `grid_style` (whitegrid, ticks, white, darkgrid, dark).
-6. Explain your architectural reasoning clearly in `reasoning`.
+6. Set `sort_order` (none, ascending, descending) for bar/pie charts.
+7. Set `top_n` (integer 3-30 or null) to limit displayed categories if needed.
+8. Set `orientation` (vertical, horizontal) for bar/box charts.
+9. Set `legend_position` (auto, right, bottom, none).
+10. Explain your architectural reasoning clearly in `reasoning`.
+
+### Aesthetic Rules (follow these for professional chart quality):
+- For bar charts: set sort_order to 'descending' (sorted bars almost always look cleaner and easier to read).
+- If a categorical column has more than 10 unique values: set top_n to 8-10 to prevent axis clutter.
+- For bar charts with long category names (average >15 characters): use orientation 'horizontal'.
+- For pie charts: always set top_n to 8 or fewer slices.
+- Use hue_column only when a secondary categorical column has 2-5 unique values.
+- Prefer grid_style 'whitegrid' for standard charts, 'white' for scatter plots, 'ticks' for minimalist figures.
+- Set legend_position to 'none' when there is no hue_column.
+- Set legend_position to 'bottom' when there are more than 4 hue categories.
 """
 
     def _heuristic_fallback(self, summary: DatasetSummary, error_reason: str) -> ChartSpec:
@@ -183,6 +232,11 @@ You are an expert data visualization architect. Analyze the dataset summary belo
         numeric_cols = [c for c, t in col_types.items() if t == "numeric"]
         cat_cols = [c for c, t in col_types.items() if t == "categorical/text"]
 
+        sort_order = SortOrder.NONE
+        top_n = None
+        orientation = Orientation.VERTICAL
+        legend_position = LegendPosition.NONE
+
         if datetime_cols and numeric_cols:
             x_col = datetime_cols[0]
             y_col = numeric_cols[0]
@@ -195,6 +249,10 @@ You are an expert data visualization architect. Analyze the dataset summary belo
             chart_type = ChartType.BAR
             agg = AggregationType.SUM
             title = f"Total {y_col.capitalize()} by {x_col.capitalize()}"
+            sort_order = SortOrder.DESCENDING
+            x_prof = next((p for p in summary.column_profiles if p.name == x_col), None)
+            if x_prof and x_prof.unique_count > 10:
+                top_n = 10
         elif len(numeric_cols) >= 2:
             x_col = numeric_cols[0]
             y_col = numeric_cols[1]
@@ -207,11 +265,21 @@ You are an expert data visualization architect. Analyze the dataset summary belo
             chart_type = ChartType.HISTOGRAM
             agg = AggregationType.NONE
             title = f"Distribution of {x_col.capitalize()}"
+        elif cat_cols:
+            x_col = cat_cols[0]
+            y_col = None
+            chart_type = ChartType.BAR
+            agg = AggregationType.COUNT
+            title = f"Frequency of {x_col.capitalize()}"
+            sort_order = SortOrder.DESCENDING
+            x_prof = next((p for p in summary.column_profiles if p.name == x_col), None)
+            if x_prof and x_prof.unique_count > 10:
+                top_n = 10
         else:
             x_col = cols[0] if cols else "X"
-            y_col = cols[1] if len(cols) > 1 else None
+            y_col = None
             chart_type = ChartType.BAR
-            agg = AggregationType.NONE
+            agg = AggregationType.COUNT
             title = "Dataset Preview Visualization"
 
         return ChartSpec(
@@ -225,6 +293,10 @@ You are an expert data visualization architect. Analyze the dataset summary belo
             y_label=y_col.replace("_", " ").title() if y_col else "Count",
             theme=Theme.ORANGES,
             grid_style=GridStyle.WHITEGRID,
+            sort_order=sort_order,
+            top_n=top_n,
+            orientation=orientation,
+            legend_position=legend_position,
             fig_width=10.0,
             fig_height=6.0,
             show_grid=True,

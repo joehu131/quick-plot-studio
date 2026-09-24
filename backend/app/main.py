@@ -14,11 +14,12 @@ app = FastAPI(
 # Falls back to localhost for local development.
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 _origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+_allow_credentials = "*" not in _origins
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
-    allow_credentials=True,
+    allow_credentials=_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

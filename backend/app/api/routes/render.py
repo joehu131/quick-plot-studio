@@ -11,7 +11,7 @@ class RenderRequest(BaseModel):
     dataset_id: str = Field(..., description="Unique dataset identifier obtained from /api/upload")
     spec: ChartSpec = Field(..., description="Chart specification defining plot parameters")
     format: Optional[str] = Field(default="png", description="Target image format (png or svg)")
-    dpi: Optional[int] = Field(default=300, description="DPI resolution for PNG export (150 or 300)")
+    dpi: Optional[int] = Field(default=300, ge=72, le=600, description="DPI resolution for PNG export (between 72 and 600)")
 
 @router.post("/render")
 def render_chart(payload: RenderRequest):

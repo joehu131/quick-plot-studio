@@ -78,23 +78,23 @@ export default function JsonSpecModal({ isOpen, onClose, spec, summary }: JsonSp
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto font-sans"
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto font-body"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white border border-zinc-200 rounded-xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden text-zinc-900"
+        className="bg-white border border-surface-border rounded-xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden text-text-main"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-[#F8F9FA]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border bg-surface">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-[#E27C52]/10 border border-[#E27C52]/20">
-              <Code2 className="w-5 h-5 text-[#E27C52]" />
+            <div className="p-2 rounded-lg bg-primary-light border border-primary-border">
+              <Code2 className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900 font-mono tracking-tight">
+              <h2 className="text-base font-bold text-text-main font-heading tracking-tight">
                 Code & Pipeline Inspector
               </h2>
-              <p className="text-xs text-zinc-500 font-mono mt-0.5">
+              <p className="text-xs text-text-muted mt-0.5">
                 Inspect AI input payload, Pydantic ChartSpec, or copy Seaborn Python code
               </p>
             </div>
@@ -102,21 +102,22 @@ export default function JsonSpecModal({ isOpen, onClose, spec, summary }: JsonSp
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-zinc-200 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-zinc-100 text-text-muted hover:text-text-main transition-colors cursor-pointer"
+            aria-label="Close inspector"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Navigation - High-Contrast Segmented Controls */}
-        <div className="bg-[#F8F9FA] px-6 py-2.5 border-b border-zinc-200">
-          <div className="inline-flex p-1 bg-zinc-200/80 rounded-lg font-mono text-xs space-x-1 flex-wrap gap-y-1">
+        <div className="bg-surface px-6 py-2.5 border-b border-surface-border">
+          <div className="inline-flex p-1 bg-surface-border/50 border border-surface-border rounded-lg text-xs space-x-1 flex-wrap gap-y-1">
             <button
               onClick={() => setActiveTab("input")}
               className={`px-3.5 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
                 activeTab === "input"
-                  ? "bg-[#E27C52] text-white shadow-2xs"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-text-muted hover:text-text-main hover:bg-white/60"
               }`}
             >
               Input Payload (JSON)
@@ -126,8 +127,8 @@ export default function JsonSpecModal({ isOpen, onClose, spec, summary }: JsonSp
               onClick={() => setActiveTab("output")}
               className={`px-3.5 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
                 activeTab === "output"
-                  ? "bg-[#E27C52] text-white shadow-2xs"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-text-muted hover:text-text-main hover:bg-white/60"
               }`}
             >
               Output Spec (JSON)
@@ -137,8 +138,8 @@ export default function JsonSpecModal({ isOpen, onClose, spec, summary }: JsonSp
               onClick={() => setActiveTab("code")}
               className={`px-3.5 py-1.5 rounded-md font-bold transition-all cursor-pointer ${
                 activeTab === "code"
-                  ? "bg-[#E27C52] text-white shadow-2xs"
-                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-text-muted hover:text-text-main hover:bg-white/60"
               }`}
             >
               Seaborn Code (Python)
@@ -148,25 +149,25 @@ export default function JsonSpecModal({ isOpen, onClose, spec, summary }: JsonSp
 
         {/* Content View */}
         <div className="p-6 overflow-auto flex-1 bg-[#18181B] text-[#F4F4F5]">
-          <pre className="font-mono text-xs leading-relaxed overflow-x-auto selection:bg-[#E27C52] selection:text-white">
+          <pre className="font-code text-xs leading-relaxed overflow-x-auto">
             <code>{activeContent}</code>
           </pre>
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-3.5 border-t border-zinc-200 bg-[#F8F9FA] flex items-center justify-between font-mono">
+        <div className="px-6 py-3.5 border-t border-surface-border bg-surface flex items-center justify-between">
           <button
             onClick={handleCopy}
-            className="px-3.5 py-1.5 rounded-lg bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-800 text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-white border border-surface-border hover:bg-surface text-text-main text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-600">Copied!</span>
+                <Check className="w-3.5 h-3.5 text-primary" />
+                <span className="text-primary font-bold">Copied!</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 text-zinc-500" />
+                <Copy className="w-3.5 h-3.5 text-text-muted" />
                 <span>
                   Copy {activeTab === "input" ? "Input JSON" : activeTab === "output" ? "Output Spec" : "Python Code"}
                 </span>
@@ -177,7 +178,7 @@ export default function JsonSpecModal({ isOpen, onClose, spec, summary }: JsonSp
           <div className="flex items-center space-x-2">
             <button
               onClick={handleDownload}
-              className="px-4 py-1.5 bg-[#E27C52] hover:bg-[#D46B41] text-white font-bold text-xs rounded-lg transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer"
+              className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white font-bold text-xs rounded-lg transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>

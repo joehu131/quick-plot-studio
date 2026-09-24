@@ -27,12 +27,17 @@ A dataset visualizer that turns table data such as CSV files into good looking c
 
 ## Features
 
-- **Multi-model support** — Switch between the Free Gemini models: 3.5 Flash Lite, Gemini 3.6 Flash, Gemma-4-26b, or a rule-based fallback (no AI).
+- **Multi-model support** — Switch between Gemini 3.5 Flash Lite, Gemini 3.6 Flash, Gemma-4-26b, or a rule-based fallback (no AI).
+- **Automatic rate-limit fallback** — If Gemini returns a 429, the backend retries with Gemma-4 before falling back to deterministic rules.
+- **Statistical data profiling** — Analyzes cardinality, null counts, distributions (min/max/mean/std), top categorical frequencies, and date boundaries via 15-row stratified sampling before querying the AI.
 - **Structured AI output** — Gemini returns a typed `ChartSpec` JSON validated by Pydantic. No AI-generated code is executed.
-- **Live spec editing** — Form fields are populated with the AI recommendation but you can adjust titles, themes, grid/background styles, aggregations, and axes without re-calling the LLM.
-- **Matplotlib rendering** — Charts render server-side with Matplotlib.
+- **Live spec editing** — Form controls populate with the AI recommendation. Adjust titles, themes, grid/background styles, aggregations, sort orders, top-N categories, orientations, and axes without re-calling the LLM (debounced re-renders, sub-50ms).
+- **Studio themes & typography** — Switch between 6 curated palettes (Obsidian Slate, Viridis Teal, Magma Flame, Cividis Ocean, Warm Ochre, Nordic Mint) and 5 typography pairings.
+- **300 DPI rendering** — Charts render server-side in a Matplotlib BytesIO buffer at 300 DPI with click-to-zoom fullscreen view.
+- **Session-based uploads** — `POST /api/upload` returns a `dataset_id`. Subsequent render calls send only the ID + spec, avoiding redundant data transfer.
 - **Export** — Download as 300 DPI PNG, vector SVG, or the raw JSON chart spec.
 - **8 built-in dataset presets** — SaaS Churn & LTV, Tech Stock Volatility, Customer Segmentation, ML Model Benchmarks, Quarterly Tech Sales, Iris Flower Metrics, Global Temperatures, AI Salaries.
+- **Architecture docs** — Built-in flowchart modal and pipeline walkthrough ([`docs/DATA_PIPELINE_WALKTHROUGH.md`](docs/DATA_PIPELINE_WALKTHROUGH.md)).
 ---
 
 ## Architecture
@@ -72,7 +77,7 @@ sequenceDiagram
 | Layer | Tools |
 |-------|-------|
 | Backend | `Python 3.12`, `FastAPI`, `Pandas`, `Matplotlib`, `Seaborn`, `Pydantic v2`, `google-genai SDK`, `Pytest` |
-| Frontend | `Next.js 15 (React 19)`, `Tailwind CSS`, `TypeScript`, `Lucide Icons` |
+| Frontend | `Next.js 16 (React 19)`, `Tailwind CSS v4`, `TypeScript`, `Lucide Icons` |
 | AI | `Gemini 3.5 Flash Lite`, `Gemini 3.6 Flash`, `Gemma-4-26b`, `Rule-based engine` |
 | Infra | `Docker`, `Docker Compose`, `GitHub Actions CI/CD` |
 
@@ -110,7 +115,12 @@ Application settings in `backend/app/config.py`
 git clone git@github.com:joehu131/QuickPlotStudio.git
 cd QuickPlotStudio
 
-echo "GEMINI_API_KEY=your_actual_gemini_api_key" > backend/.env
+# Copy example environment templates
+cp backend/.env.example backend/.env
+# On Windows PowerShell:
+# Copy-Item backend/.env.example backend/.env
+
+# Add your Gemini API key to backend/.env
 ```
 
 ### 2. Backend (FastAPI)
@@ -145,4 +155,4 @@ Open `http://localhost:3000`.
 
 ## License
 
-MIT — Joel Hultman 2026
+GNU General Public License v3.0 (GPL-3.0) - Joel Hultman 2026

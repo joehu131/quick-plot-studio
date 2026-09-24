@@ -34,10 +34,10 @@ export default function ToastBanner({ reasoning }: ToastBannerProps) {
 
   return (
     <div
-      className={`rounded-lg p-3.5 border shadow-sm font-mono text-xs transition-all duration-200 flex items-start justify-between space-x-3 ${
+      className={`rounded-xl p-3.5 border shadow-2xs font-body text-xs transition-all duration-200 flex items-start justify-between space-x-3 ${
         isStatistical
-          ? "bg-rose-50 border-rose-200 text-rose-900"
-          : "bg-amber-50 border-amber-200 text-amber-900"
+          ? "bg-rose-50/80 border-rose-200 text-rose-900"
+          : "bg-amber-50/80 border-amber-200 text-amber-900"
       }`}
     >
       <div className="flex items-start space-x-2.5">
@@ -47,10 +47,10 @@ export default function ToastBanner({ reasoning }: ToastBannerProps) {
           <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
         )}
         <div className="space-y-0.5">
-          <div className="font-bold tracking-tight">
+          <div className="font-bold tracking-tight font-heading">
             {isStatistical ? "Statistical Engine Fallback" : "Model Auto-Fallback Notice"}
           </div>
-          <p className="text-[11px] leading-relaxed opacity-90">
+          <p className="text-xs leading-relaxed opacity-90 font-body">
             {fallbackMessage}
           </p>
         </div>
@@ -58,7 +58,7 @@ export default function ToastBanner({ reasoning }: ToastBannerProps) {
 
       <button
         onClick={() => setVisible(false)}
-        className="p-1 rounded hover:bg-black/5 transition-colors text-zinc-500 hover:text-zinc-800 shrink-0"
+        className="p-1 rounded-md hover:bg-black/5 transition-colors text-zinc-500 hover:text-zinc-800 shrink-0 cursor-pointer"
         title="Dismiss notice"
       >
         <X className="w-3.5 h-3.5" />

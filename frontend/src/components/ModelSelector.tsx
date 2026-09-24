@@ -64,23 +64,23 @@ export default function ModelSelector({ selectedModel, onModelChange }: ModelSel
   };
 
   return (
-    <div className="relative inline-block font-mono" ref={containerRef}>
+    <div className="relative inline-block font-body" ref={containerRef}>
       {/* Pill Trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-[11px] bg-[#E27C52]/10 text-[#E27C52] border border-[#E27C52]/30 font-bold hover:bg-[#E27C52]/20 transition-all shadow-2xs cursor-pointer select-none"
+        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs bg-primary-light text-primary border border-primary-border font-bold hover:bg-primary-light/80 transition-all shadow-2xs cursor-pointer select-none"
       >
-        <Sparkles className="w-3 h-3 text-[#E27C52] shrink-0" />
+        <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
         <span>{activeOption.label}</span>
-        <ChevronDown className={`w-3 h-3 text-[#E27C52] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-primary transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {/* Floating Dropdown Menu Panel */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-76 bg-white border border-zinc-200 rounded-lg shadow-xl z-50 overflow-hidden py-1 font-sans animate-in fade-in zoom-in-95 duration-100">
-          <div className="px-3 py-1.5 border-b border-zinc-100 bg-[#F8F9FA] flex items-center justify-between text-[10px] font-mono text-zinc-500 font-semibold uppercase tracking-wider">
+        <div className="absolute left-0 top-full mt-1.5 w-76 bg-white border border-surface-border rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100">
+          <div className="px-3 py-1.5 border-b border-surface-border bg-surface flex items-center justify-between text-[11px] text-text-muted font-semibold uppercase tracking-wider">
             <span>Select Engine Model</span>
-            <span className="text-[#E27C52]">4 Options</span>
+            <span className="text-primary font-bold">4 Options</span>
           </div>
 
           <div className="py-1">
@@ -90,36 +90,36 @@ export default function ModelSelector({ selectedModel, onModelChange }: ModelSel
                 <button
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full text-left px-3 py-2 flex items-start justify-between hover:bg-[#E27C52]/5 transition-colors cursor-pointer group ${
-                    isSelected ? "bg-[#E27C52]/10" : ""
+                  className={`w-full text-left px-3 py-2 flex items-start justify-between hover:bg-surface transition-colors cursor-pointer group ${
+                    isSelected ? "bg-primary-light" : ""
                   }`}
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center space-x-1.5">
-                      <span className={`text-xs font-bold font-mono ${isSelected ? "text-[#E27C52]" : "text-zinc-900 group-hover:text-[#E27C52]"}`}>
+                      <span className={`text-xs font-bold ${isSelected ? "text-primary" : "text-text-main group-hover:text-primary"}`}>
                         {option.label}
                       </span>
                       {option.badge && (
-                        <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border font-code ${
                           option.badge === "Recommended"
-                            ? "bg-[#E27C52]/10 text-[#E27C52] border-[#E27C52]/30"
+                            ? "bg-primary-light text-primary border-primary-border"
                             : option.badge === "Heavy Duty"
-                            ? "bg-purple-100 text-purple-700 border-purple-200"
-                            : "bg-zinc-100 text-zinc-600 border-zinc-200"
+                            ? "bg-purple-50 text-purple-700 border-purple-200"
+                            : "bg-surface text-text-muted border-surface-border"
                         }`}>
                           {option.badge}
                         </span>
                       )}
                     </div>
                     {option.description && (
-                      <p className="text-[10px] text-zinc-500 line-clamp-1 font-sans">
+                      <p className="text-[11px] text-text-muted line-clamp-1">
                         {option.description}
                       </p>
                     )}
                   </div>
 
                   {isSelected && (
-                    <Check className="w-3.5 h-3.5 text-[#E27C52] shrink-0 ml-2 mt-0.5" />
+                    <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-2 mt-0.5" />
                   )}
                 </button>
               );

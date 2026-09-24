@@ -34,43 +34,43 @@ export default function DataInput({ onUploadFile, onUploadText, isLoading }: Dat
   };
 
   return (
-    <div className="bg-[#F8F9FA] border border-zinc-200 rounded-lg p-3.5 shadow-sm">
+    <div className="bg-surface border border-surface-border rounded-xl p-4 shadow-2xs font-body">
       {/* Header Tabs */}
-      <div className="flex items-center justify-between border-b border-zinc-200 pb-2.5 mb-3">
+      <div className="flex items-center justify-between border-b border-surface-border pb-3 mb-3">
         <div className="flex items-center space-x-2">
-          <Database className="w-4 h-4 text-[#E27C52]" />
-          <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider font-mono">
+          <Database className="w-4 h-4 text-primary" />
+          <h2 className="text-xs font-bold text-text-main uppercase tracking-wider font-heading">
             1. Select or Upload Dataset
           </h2>
         </div>
 
-        <div className="flex items-center bg-white p-0.5 rounded border border-zinc-200">
+        <div className="flex items-center bg-white p-0.5 rounded-lg border border-surface-border shadow-2xs">
           <button
             onClick={() => setActiveTab("presets")}
-            className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${
+            className={`px-3 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
               activeTab === "presets"
-                ? "bg-[#E27C52] text-white font-bold shadow-2xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "bg-primary text-white font-bold shadow-xs"
+                : "text-text-muted hover:text-text-main"
             }`}
           >
             Presets ({SAMPLE_DATASETS.length})
           </button>
           <button
             onClick={() => setActiveTab("upload")}
-            className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${
+            className={`px-3 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
               activeTab === "upload"
-                ? "bg-[#E27C52] text-white font-bold shadow-2xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "bg-primary text-white font-bold shadow-xs"
+                : "text-text-muted hover:text-text-main"
             }`}
           >
             Upload File
           </button>
           <button
             onClick={() => setActiveTab("paste")}
-            className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${
+            className={`px-3 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
               activeTab === "paste"
-                ? "bg-[#E27C52] text-white font-bold shadow-2xs"
-                : "text-zinc-600 hover:text-zinc-900"
+                ? "bg-primary text-white font-bold shadow-xs"
+                : "text-text-muted hover:text-text-main"
             }`}
           >
             Paste CSV
@@ -78,24 +78,24 @@ export default function DataInput({ onUploadFile, onUploadText, isLoading }: Dat
         </div>
       </div>
 
-      {/* Tab 1: Slimmer Presets Grid (4 Columns) */}
+      {/* Tab 1: Presets Grid */}
       {activeTab === "presets" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
           {SAMPLE_DATASETS.map((dataset) => (
             <button
               key={dataset.id}
               onClick={() => handlePresetSelect(dataset)}
               disabled={isLoading}
-              className="text-left group p-2.5 rounded-md border border-zinc-200 bg-white hover:border-[#E27C52] hover:bg-[#E27C52]/5 transition-all cursor-pointer relative shadow-2xs flex flex-col justify-between h-[68px]"
+              className="text-left group p-3 rounded-lg border border-surface-border bg-white hover:border-primary hover:bg-primary-light/50 transition-all cursor-pointer relative shadow-2xs flex flex-col justify-between h-[74px]"
             >
               <div className="flex items-start justify-between">
-                <span className="text-[9px] font-mono font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 group-hover:bg-[#E27C52]/10 group-hover:text-[#E27C52] transition-colors">
+                <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-surface text-text-muted group-hover:bg-primary-light group-hover:text-primary transition-colors">
                   {dataset.category}
                 </span>
-                <ArrowRight className="w-3 h-3 text-zinc-300 group-hover:text-[#E27C52] transform group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+                <ArrowRight className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transform group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-zinc-900 group-hover:text-[#E27C52] font-mono transition-colors truncate">
+                <h3 className="text-xs font-bold text-text-main group-hover:text-primary transition-colors truncate">
                   {dataset.name}
                 </h3>
               </div>
@@ -113,16 +113,16 @@ export default function DataInput({ onUploadFile, onUploadText, isLoading }: Dat
           }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
-          className={`border border-dashed rounded-lg p-4 text-center transition-colors ${
+          className={`border border-dashed rounded-xl p-5 text-center transition-colors ${
             isDragOver
-              ? "border-[#E27C52] bg-[#E27C52]/5"
-              : "border-zinc-300 bg-white hover:border-zinc-400"
+              ? "border-primary bg-primary-light/40"
+              : "border-surface-border bg-white hover:border-primary-border"
           }`}
         >
-          <Upload className="w-5 h-5 text-[#E27C52] mx-auto mb-1.5" />
-          <p className="text-xs text-zinc-700 font-medium">
+          <Upload className="w-5 h-5 text-primary mx-auto mb-2" />
+          <p className="text-xs text-text-main font-medium">
             Drag and drop your CSV file here, or{" "}
-            <label className="text-[#E27C52] hover:underline cursor-pointer font-mono font-bold">
+            <label className="text-primary hover:underline cursor-pointer font-bold">
               browse
               <input
                 type="file"
@@ -133,26 +133,30 @@ export default function DataInput({ onUploadFile, onUploadText, isLoading }: Dat
               />
             </label>
           </p>
-          <p className="text-[10px] text-zinc-400 mt-0.5 font-mono">Supports .csv, .tsv, .txt up to 5MB</p>
+          <p className="text-[11px] text-text-muted mt-1 font-body">Supports .csv, .tsv, .txt up to 5MB</p>
         </div>
       )}
 
       {/* Tab 3: Paste CSV */}
       {activeTab === "paste" && (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <textarea
             value={pastedText}
             onChange={(e) => setPastedText(e.target.value)}
             placeholder="Paste raw CSV text here... (Header1,Header2&#10;val1,val2)"
             rows={3}
-            className="w-full bg-white border border-zinc-200 rounded-md p-2 text-xs text-zinc-900 placeholder-zinc-400 font-mono focus:outline-none focus:border-[#E27C52] transition-colors"
+            className="w-full bg-white border border-surface-border rounded-lg p-2.5 text-xs text-text-main placeholder-text-muted font-body focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
           />
           <button
-            onClick={() => onUploadText(pastedText)}
-            disabled={isLoading || !pastedText.trim()}
-            className="w-full py-1.5 bg-[#E27C52] hover:bg-[#D46B41] disabled:opacity-50 text-white text-xs font-bold rounded-md flex items-center justify-center space-x-1.5 transition-colors font-mono shadow-2xs"
+            onClick={() => {
+              if (pastedText.trim()) {
+                onUploadText(pastedText);
+              }
+            }}
+            disabled={isLoading}
+            className="w-full px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors shadow-2xs cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-white" />
             <span>Process & Analyze CSV</span>
           </button>
         </div>
